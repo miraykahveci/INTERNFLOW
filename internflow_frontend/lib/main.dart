@@ -1,29 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'views/login_page.dart';
 
-void main() {
-  runApp(const InternFlowApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await dotenv.load(fileName: ".env");
+  
+  print("URL: ${dotenv.env['SUPABASE_URL']}");
+  print("KEY: ${dotenv.env['SUPABASE_KEY']}");
+  
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_KEY']!,
+  );
+  
+  runApp(const MyApp());
 }
 
-class InternFlowApp extends StatelessWidget {
-  const InternFlowApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'InternFlow',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6A0F0F)
+        ),
         useMaterial3: true,
       ),
-      home: const Scaffold(
-        body: Center(
-          child: Text(
-            'InternFlow Yakında Burada!',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
+      home: const LoginPage(),
     );
   }
 }
