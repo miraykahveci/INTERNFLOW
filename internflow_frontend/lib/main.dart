@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'views/login_page.dart';
+import 'views/student_dashboard.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
