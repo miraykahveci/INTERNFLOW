@@ -156,7 +156,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           child: Column(
             children: [
               const SizedBox(height: 80),
-              const Icon(Icons.school, size: 100, color: Colors.white),
+              Image.asset(
+              'assets/images/app_logo.png',
+                 width: 120,
+                  height: 120,
+                        ),
               const Text(
                 "InternFlow",
                 style: TextStyle(
