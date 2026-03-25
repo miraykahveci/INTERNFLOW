@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'student_dashboard.dart';
+import 'academician_dashboard.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -106,9 +107,17 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             builder: (context) => const StudentDashboardPage(),
           ),
         );
-      } else if (role == 'academician') {
-        // TODO: Akademisyen dashboard eklenecek
+        } else if (role == 'academician') {
+          Navigator.pushReplacement(
+           context,
+           MaterialPageRoute(
+              builder: (context) => const AcademicianDashboardPage(),
+          ),
+        );
       }
+      
+        
+      
 
     } on AuthException catch (_) {
       if (!mounted) return;

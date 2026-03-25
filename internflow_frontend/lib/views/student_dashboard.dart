@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'application_form_page.dart';
 
 class StudentDashboardPage extends StatefulWidget {
   const StudentDashboardPage({super.key});
@@ -10,30 +11,47 @@ class StudentDashboardPage extends StatefulWidget {
 
 class _StudentDashboardPageState extends State<StudentDashboardPage> {
   final Color primaryColor = const Color(0xFF6A0F0F);
-  
+
   String _fullName = '';
   String _department = '';
   bool _isLoading = true;
 
+  // Başvuru durumu
+  Map<String, dynamic>? _internshipData;
+  String _internshipStatus = 'none'; // none, pending, approved, rejected, active, completed
+
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _loadAllData();
   }
 
-  Future<void> _loadUserData() async {
+  Future<void> _loadAllData() async {
+    setState(() => _isLoading = true);
     try {
       final userId = Supabase.instance.client.auth.currentUser!.id;
-      
-      final response = await Supabase.instance.client
+
+      // Kullanıcı bilgilerini çek
+      final userResponse = await Supabase.instance.client
           .from('users')
           .select('full_name, department')
           .eq('user_id', userId)
           .single();
 
+      // En son başvuruyu çek
+      final internshipResponse = await Supabase.instance.client
+          .from('internship')
+          .select()
+          .eq('student_id', userId)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
       setState(() {
-        _fullName = response['full_name'] ?? '';
-        _department = response['department'] ?? '';
+        _fullName = userResponse['full_name'] ?? '';
+        _department = userResponse['department'] ?? '';
+        _internshipData = internshipResponse;
+        _internshipStatus = internshipResponse?['status'] ?? 'none';
         _isLoading = false;
       });
     } catch (e) {
@@ -41,8 +59,88 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
     }
   }
 
-  // İsmin sadece ilk adını alıyoruz (Miray Kahveci → Miray)
   String get _firstName => _fullName.split(' ').first;
+
+  // Yol haritası adımlarının durumunu belirle
+  bool _isStepCompleted(int step) {
+    switch (step) {
+      case 1: // Başvuru Oluştur
+        return _internshipStatus != 'none';
+      case 2: // Akademisyen Onayı
+        return _internshipStatus == 'approved' ||
+            _internshipStatus == 'active' ||
+            _internshipStatus == 'completed';
+      case 3: // SGK / Sigorta Girişi
+        return _internshipStatus == 'active' ||
+            _internshipStatus == 'completed';
+      default:
+        return false;
+    }
+  }
+
+  bool _isCurrentStep(int step) {
+    switch (step) {
+      case 1:
+        return _internshipStatus == 'none';
+      case 2:
+        return _internshipStatus == 'pending';
+      case 3:
+        return _internshipStatus == 'approved';
+      default:
+        return false;
+    }
+  }
+
+  String _getStatusText() {
+    switch (_internshipStatus) {
+      case 'pending':
+        return 'Başvurunuz danışman onayı bekliyor...';
+      case 'approved':
+        return 'Başvurunuz onaylandı! SGK belgelerinizi yükleyiniz.';
+      case 'rejected':
+        return 'Başvurunuz reddedildi. Yeni başvuru yapabilirsiniz.';
+      case 'active':
+        return 'Stajınız aktif olarak devam ediyor.';
+      case 'completed':
+        return 'Staj süreciniz tamamlandı.';
+      default:
+        return '';
+    }
+  }
+
+  Color _getStatusColor() {
+    switch (_internshipStatus) {
+      case 'pending':
+        return Colors.orange;
+      case 'approved':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      case 'active':
+        return Colors.blue;
+      case 'completed':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon() {
+    switch (_internshipStatus) {
+      case 'pending':
+        return Icons.hourglass_top;
+      case 'approved':
+        return Icons.check_circle;
+      case 'rejected':
+        return Icons.cancel;
+      case 'active':
+        return Icons.work;
+      case 'completed':
+        return Icons.emoji_events;
+      default:
+        return Icons.info;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +186,6 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                           ],
                         ),
                       ),
-                      // Bildirim ikonu
                       Container(
                         width: 40,
                         height: 40,
@@ -103,7 +200,6 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                           size: 22,
                         ),
                       ),
-                      // Profil ikonu
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.white,
@@ -127,69 +223,8 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // YENİ STAJ BAŞLAT KARTI
-                        Card(
-                          elevation: 8,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Yeni Staj Başlat',
-                                  style: TextStyle(
-                                    color: primaryColor,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'Yaz dönemi veya dönem içi staj sürecini başlatmak için başvurunu oluştur.',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 55,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      // TODO: Başvuru sayfasına git
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: primaryColor,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'Başvuru Formunu Gönder',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  '⚠️ Formu gönderdikten sonra düzenleme yapılamaz.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        // BAŞVURU DURUMU VEYA YENİ BAŞVURU
+                        _buildApplicationCard(),
                         const SizedBox(height: 24),
 
                         // STAJ YOL HARİTASI
@@ -211,21 +246,28 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                           child: Column(
                             children: [
                               _buildRoadmapItem(
-                                icon: Icons.check_box,
+                                step: 1,
                                 text: '1. Başvuru Oluştur',
-                                isCompleted: true,
                               ),
-                              _buildDivider(),
+                              _buildRoadmapDivider(),
                               _buildRoadmapItem(
-                                icon: Icons.lock,
+                                step: 2,
                                 text: '2. Akademisyen Onayı',
-                                isCompleted: false,
                               ),
-                              _buildDivider(),
+                              _buildRoadmapDivider(),
                               _buildRoadmapItem(
-                                icon: Icons.lock,
+                                step: 3,
                                 text: '3. SGK / Sigorta Girişi',
-                                isCompleted: false,
+                              ),
+                              _buildRoadmapDivider(),
+                              _buildRoadmapItem(
+                                step: 4,
+                                text: '4. Staj Dönemi',
+                              ),
+                              _buildRoadmapDivider(),
+                              _buildRoadmapItem(
+                                step: 5,
+                                text: '5. Defter Teslimi & AI Analiz',
                               ),
                             ],
                           ),
@@ -364,32 +406,276 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
     );
   }
 
-  Widget _buildRoadmapItem({
-    required IconData icon,
-    required String text,
-    required bool isCompleted,
-  }) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          color: isCompleted ? primaryColor : Colors.grey,
-          size: 24,
+  // ========== BAŞVURU KARTI ==========
+  Widget _buildApplicationCard() {
+    // Başvuru yoksa veya reddedildiyse → Yeni başvuru butonu
+    if (_internshipStatus == 'none' || _internshipStatus == 'rejected') {
+      return Card(
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
         ),
-        const SizedBox(width: 12),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: isCompleted ? 16 : 15,
-            fontWeight: isCompleted ? FontWeight.bold : FontWeight.normal,
-            color: isCompleted ? primaryColor : Colors.grey,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_internshipStatus == 'rejected') ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFEBEE),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.cancel, color: Colors.red, size: 20),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Önceki başvurunuz reddedildi. Yeni başvuru yapabilirsiniz.',
+                          style: TextStyle(color: Colors.red, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              Text(
+                'Yeni Staj Başlat',
+                style: TextStyle(
+                  color: primaryColor,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Yaz dönemi veya dönem içi staj sürecini başlatmak için başvurunu oluştur.',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ApplicationFormPage(),
+                      ),
+                    );
+                    if (result == true) {
+                      _loadAllData();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Başvuru Formunu Gönder',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '⚠️ Formu gönderdikten sonra düzenleme yapılamaz.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 11),
+              ),
+            ],
           ),
         ),
+      );
+    }
+
+    // Başvuru varsa → Durum kartı
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _getStatusColor().withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    _getStatusIcon(),
+                    color: _getStatusColor(),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _internshipData?['company_name'] ?? '',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF212121),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor().withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          _internshipStatus == 'pending'
+                              ? 'ONAY BEKLİYOR'
+                              : _internshipStatus == 'approved'
+                                  ? 'ONAYLANDI'
+                                  : _internshipStatus.toUpperCase(),
+                          style: TextStyle(
+                            color: _getStatusColor(),
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: _getStatusColor().withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline,
+                      size: 18, color: _getStatusColor()),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _getStatusText(),
+                      style: TextStyle(
+                        color: _getStatusColor(),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_internshipData != null) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.calendar_today,
+                      size: 14, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${_internshipData!['start_date']} - ${_internshipData!['end_date']}',
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ========== YOL HARİTASI ==========
+  Widget _buildRoadmapItem({
+    required int step,
+    required String text,
+  }) {
+    final isCompleted = _isStepCompleted(step);
+    final isCurrent = _isCurrentStep(step);
+
+    IconData icon;
+    Color iconColor;
+
+    if (isCompleted) {
+      icon = Icons.check_circle;
+      iconColor = const Color(0xFF2E7D32);
+    } else if (isCurrent) {
+      icon = Icons.radio_button_checked;
+      iconColor = primaryColor;
+    } else {
+      icon = Icons.lock;
+      iconColor = Colors.grey;
+    }
+
+    return Row(
+      children: [
+        Icon(icon, color: iconColor, size: 24),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: isCompleted || isCurrent ? 16 : 15,
+              fontWeight:
+                  isCompleted || isCurrent ? FontWeight.bold : FontWeight.normal,
+              color: isCompleted
+                  ? const Color(0xFF2E7D32)
+                  : isCurrent
+                      ? primaryColor
+                      : Colors.grey,
+            ),
+          ),
+        ),
+        if (isCurrent)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: primaryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'Şu an',
+              style: TextStyle(
+                color: primaryColor,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildRoadmapDivider() {
     return Container(
       width: 2,
       height: 20,
