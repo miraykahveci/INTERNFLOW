@@ -16,15 +16,11 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
   String _title = '';
   bool _isLoading = true;
 
-  // İstatistikler
   int _pendingCount = 0;
   int _sgkPendingCount = 0;
   int _activeCount = 0;
 
-  // Bekleyen işlemler listesi
   List<Map<String, dynamic>> _pendingItems = [];
-
-  // Filtre
   String _activeFilter = 'all';
 
   @override
@@ -38,21 +34,18 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
     try {
       final userId = Supabase.instance.client.auth.currentUser!.id;
 
-      // Akademisyen bilgilerini çek
       final userResponse = await Supabase.instance.client
           .from('users')
           .select('full_name, title')
           .eq('user_id', userId)
           .single();
 
-      // Kendisine atanan tüm stajları çek (öğrenci bilgileriyle birlikte)
       final internships = await Supabase.instance.client
           .from('internship')
           .select('*, users!internship_student_id_fkey(full_name, student_number, department)')
           .eq('academician_id', userId)
           .order('created_at', ascending: false);
 
-      // İstatistikleri hesapla
       final List<Map<String, dynamic>> allInternships =
           List<Map<String, dynamic>>.from(internships);
 
@@ -66,20 +59,12 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
 
         if (status == 'pending') {
           pending++;
-          items.add({
-            'type': 'pending',
-            'data': intern,
-          });
+          items.add({'type': 'pending', 'data': intern});
         } else if (status == 'approved') {
           sgkPending++;
-          items.add({
-            'type': 'sgk',
-            'data': intern,
-          });
+          items.add({'type': 'sgk', 'data': intern});
         } else if (status == 'active') {
           active++;
-        } else if (status == 'completed') {
-          // Defter teslim edilmişleri de gösterebiliriz
         }
       }
 
@@ -114,7 +99,6 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
           .update({'status': newStatus})
           .eq('intern_id', internId);
 
-      // Bildirim oluştur
       final intern = _pendingItems.firstWhere(
         (item) => item['data']['intern_id'] == internId,
       );
@@ -148,7 +132,7 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
         );
       }
 
-      _loadAllData(); // Sayfayı yenile
+      _loadAllData();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -160,7 +144,9 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
 
   void _showApprovalDialog(Map<String, dynamic> internData) {
     final studentName = internData['users']?['full_name'] ?? 'Öğrenci';
-    final companyName = internData['company_name'] ?? '';
+    final studentNumber = internData['users']?['student_number']?.toString() ?? '-';
+    final studentDepartment = internData['users']?['department'] ?? '-';
+    final companyName = internData['company_name'] ?? '-';
     final internId = internData['intern_id'];
     final rejectReasonController = TextEditingController();
 
@@ -174,144 +160,179 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
         padding: EdgeInsets.fromLTRB(
           24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Başlık
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Başvuru Değerlendirmesi',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
+              const SizedBox(height: 20),
+              Text(
+                'Başvuru Değerlendirmesi',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Öğrenci bilgileri
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    studentName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Kurum: $companyName',
-                    style: const TextStyle(color: Colors.grey, fontSize: 13),
-                  ),
-                  Text(
-                    'Tarih: ${internData['start_date']} - ${internData['end_date']}',
-                    style: const TextStyle(color: Colors.grey, fontSize: 13),
-                  ),
-                  if (internData['internship_type'] != null)
-                    Text(
-                      'Tür: ${internData['internship_type'] == 'summer' ? 'Yaz Stajı' : 'Dönem İçi'}',
-                      style: const TextStyle(color: Colors.grey, fontSize: 13),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Red gerekçesi
-            TextField(
-              controller: rejectReasonController,
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: 'Red Gerekçesi (opsiyonel)',
-                hintText: 'Sadece reddetme durumunda doldurunuz...',
-                border: OutlineInputBorder(
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
                   borderRadius: BorderRadius.circular(12),
                 ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: primaryColor.withValues(alpha: 0.15),
+                          child: Text(
+                            studentName.isNotEmpty ? studentName[0] : '?',
+                            style: TextStyle(
+                              color: primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                studentName,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'No: $studentNumber • $studentDepartment',
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 24),
+                    _buildDetailRow('Staj Türü',
+                        internData['internship_type'] == 'summer' ? 'Yaz Stajı' : 'Dönem İçi'),
+                    _buildDetailRow('Tarih',
+                        '${internData['start_date']} - ${internData['end_date']}'),
+                    const Divider(height: 16),
+                    _buildDetailRow('Kurum Adı', companyName),
+                    _buildDetailRow('Departman',
+                        internData['company_sector'] ?? '-'),
+                    _buildDetailRow('Adres',
+                        internData['company_address'] ?? '-'),
+                    _buildDetailRow('Kurum E-Posta',
+                        internData['company_email'] ?? '-'),
+                    const Divider(height: 16),
+                    _buildDetailRow('Yetkili Mühendis',
+                        internData['supervisor_name'] ?? '-'),
+                    _buildDetailRow('SGK Durumu',
+                        internData['has_sgk'] == true
+                            ? 'Var (Müstehaklık mevcut)'
+                            : 'Yok (Okul yapacak)'),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-            // Butonlar
-            Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: 50,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _updateInternshipStatus(
-                          internId,
-                          'rejected',
-                          reason: rejectReasonController.text.trim(),
-                        );
-                      },
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      label: const Text(
-                        'Reddet',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
+              TextField(
+                controller: rejectReasonController,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  labelText: 'Red Gerekçesi (opsiyonel)',
+                  hintText: 'Sadece reddetme durumunda doldurunuz...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 50,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _updateInternshipStatus(
+                            internId,
+                            'rejected',
+                            reason: rejectReasonController.text.trim(),
+                          );
+                        },
+                        icon: const Icon(Icons.close, color: Colors.red),
+                        label: const Text(
+                          'Reddet',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.red),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.red),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SizedBox(
-                    height: 50,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _updateInternshipStatus(internId, 'approved');
-                      },
-                      icon: const Icon(Icons.check, color: Colors.white),
-                      label: const Text(
-                        'Onayla',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _updateInternshipStatus(internId, 'approved');
+                        },
+                        icon: const Icon(Icons.check, color: Colors.white),
+                        label: const Text(
+                          'Onayla',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -325,7 +346,6 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // ÜST HEADER
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(20, 56, 20, 20),
@@ -384,14 +404,12 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
                   ),
                 ),
 
-                // SCROLLABLE İÇERİK
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ARAMA ÇUBUĞU
                         Card(
                           elevation: 8,
                           shape: RoundedRectangleBorder(
@@ -407,8 +425,7 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
                                 const Expanded(
                                   child: TextField(
                                     decoration: InputDecoration(
-                                      hintText:
-                                          'Öğrenci Adı, No veya Bölüm Ara...',
+                                      hintText: 'Öğrenci Adı, No veya Bölüm Ara...',
                                       hintStyle: TextStyle(
                                         color: Colors.grey,
                                         fontSize: 14,
@@ -423,7 +440,6 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
                         ),
                         const SizedBox(height: 20),
 
-                        // İSTATİSTİK KARTLARI
                         Row(
                           children: [
                             _buildStatCard(
@@ -450,7 +466,6 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
                         ),
                         const SizedBox(height: 20),
 
-                        // AI ANALİZ RAPORU KARTI
                         Card(
                           elevation: 2,
                           color: const Color(0xFFE8EAF6),
@@ -466,8 +481,7 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'AI Analiz Raporu',
@@ -495,22 +509,18 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
                         ),
                         const SizedBox(height: 20),
 
-                        // FİLTRE CHIPS
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             children: [
                               _buildFilterChip('Tümü', 'all'),
-                              _buildFilterChip(
-                                  'Başvurular ($_pendingCount)', 'pending'),
-                              _buildFilterChip(
-                                  'SGK ($_sgkPendingCount)', 'sgk'),
+                              _buildFilterChip('Başvurular ($_pendingCount)', 'pending'),
+                              _buildFilterChip('SGK ($_sgkPendingCount)', 'sgk'),
                             ],
                           ),
                         ),
                         const SizedBox(height: 16),
 
-                        // BEKLEYEN İŞLEMLER
                         const Text(
                           'Bekleyen İşlemler',
                           style: TextStyle(
@@ -545,8 +555,7 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
                             ),
                           )
                         else
-                          ..._filteredItems
-                              .map((item) => _buildPendingItemCard(item)),
+                          ..._filteredItems.map((item) => _buildPendingItemCard(item)),
 
                         const SizedBox(height: 100),
                       ],
@@ -556,7 +565,6 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
               ],
             ),
 
-      // ALT NAVİGASYON
       bottomNavigationBar: Container(
         margin: const EdgeInsets.fromLTRB(24, 0, 24, 24),
         decoration: BoxDecoration(
@@ -603,8 +611,6 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
       ),
     );
   }
-
-  // ========== YARDIMCI WİDGET'LAR ==========
 
   Widget _buildStatCard({
     required String value,
@@ -675,7 +681,6 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
     final data = item['data'] as Map<String, dynamic>;
     final type = item['type'] as String;
     final studentName = data['users']?['full_name'] ?? 'Bilinmeyen';
-    final studentNumber = data['users']?['student_number']?.toString() ?? '';
     final companyName = data['company_name'] ?? '';
     final createdAt = data['created_at']?.toString().split('T')[0] ?? '';
 
@@ -725,15 +730,12 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         child: Row(
           children: [
-            // Sol şerit
             Container(width: 5, height: 90, color: stripeColor),
-            // İçerik
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    // İkon
                     Container(
                       width: 40,
                       height: 40,
@@ -744,7 +746,6 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
                       child: Icon(icon, color: iconColor, size: 20),
                     ),
                     const SizedBox(width: 16),
-                    // Bilgiler
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -799,7 +800,6 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
                         ],
                       ),
                     ),
-                    // Aksiyon butonu
                     GestureDetector(
                       onTap: () {
                         if (type == 'pending') {
@@ -829,6 +829,38 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: Color(0xFF37474F),
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
