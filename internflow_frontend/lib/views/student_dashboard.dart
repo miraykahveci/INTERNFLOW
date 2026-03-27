@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'application_form_page.dart';
 import 'student_process_page.dart'; // YENİ SAYFAMIZ EKLİ ✅
+import 'student_profile_page.dart';
 
 class StudentDashboardPage extends StatefulWidget {
   const StudentDashboardPage({super.key});
@@ -74,13 +75,13 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
   Widget _getSelectedPage() {
     switch (_selectedIndex) {
       case 0:
-        return _buildHomeContent(); // 0. Sekme: Ana Sayfa
+        return _buildHomeContent(); // Ana Sayfa
       case 1:
-        return const StudentProcessPage(); // 1. Sekme: Sürecim Sayfası
+        return const StudentProcessPage(); // Sürecim
       case 2:
         return const Center(child: Text('Dosyalar yapım aşamasında 🛠️'));
       case 3:
-        return const Center(child: Text('Profil yapım aşamasında 🛠️'));
+        return const StudentProfilePage(); // <--- İŞTE BURAYA PROFİLİ EKLEDİK ✅
       default:
         return _buildHomeContent();
     }
