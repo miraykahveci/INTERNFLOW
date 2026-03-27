@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'application_form_page.dart';
+import 'student_process_page.dart'; // YENİ SAYFAMIZ EKLİ ✅
 
 class StudentDashboardPage extends StatefulWidget {
   const StudentDashboardPage({super.key});
@@ -12,6 +13,7 @@ class StudentDashboardPage extends StatefulWidget {
 class _StudentDashboardPageState extends State<StudentDashboardPage> {
   final Color primaryColor = const Color(0xFF6A0F0F);
 
+  int _selectedIndex = 0; // Hangi sekmede olduğumuzu tutar
   String _fullName = '';
   String _department = '';
   bool _isLoading = true;
@@ -60,6 +62,31 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
   }
 
   String get _firstName => _fullName.split(' ').first;
+
+  // ========== YENİ EKLENEN SEKME KONTROL METOTLARI ==========
+  
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  Widget _getSelectedPage() {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildHomeContent(); // 0. Sekme: Ana Sayfa
+      case 1:
+        return const StudentProcessPage(); // 1. Sekme: Sürecim Sayfası
+      case 2:
+        return const Center(child: Text('Dosyalar yapım aşamasında 🛠️'));
+      case 3:
+        return const Center(child: Text('Profil yapım aşamasında 🛠️'));
+      default:
+        return _buildHomeContent();
+    }
+  }
+
+  // ==========================================================
 
   // Yol haritası adımlarının durumunu belirle
   bool _isStepCompleted(int step) {
@@ -146,217 +173,9 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // ÜST HEADER
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
-                  decoration: BoxDecoration(
-                    color: primaryColor,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(32),
-                      bottomRight: Radius.circular(32),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Merhaba, $_firstName 👋',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _department,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: 40,
-                        height: 40,
-                        margin: const EdgeInsets.only(right: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.notifications_outlined,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                      CircleAvatar(
-                        radius: 24,
-                        backgroundColor: Colors.white,
-                        child: Text(
-                          _firstName.isNotEmpty ? _firstName[0] : '?',
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // SCROLLABLE İÇERİK
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // BAŞVURU DURUMU VEYA YENİ BAŞVURU
-                        _buildApplicationCard(),
-                        const SizedBox(height: 24),
-
-                        // STAJ YOL HARİTASI
-                        const Text(
-                          'Staj Yol Haritası',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF212121),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF0F0F0),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            children: [
-                              _buildRoadmapItem(
-                                step: 1,
-                                text: '1. Başvuru Oluştur',
-                              ),
-                              _buildRoadmapDivider(),
-                              _buildRoadmapItem(
-                                step: 2,
-                                text: '2. Akademisyen Onayı',
-                              ),
-                              _buildRoadmapDivider(),
-                              _buildRoadmapItem(
-                                step: 3,
-                                text: '3. SGK / Sigorta Girişi',
-                              ),
-                              _buildRoadmapDivider(),
-                              _buildRoadmapItem(
-                                step: 4,
-                                text: '4. Staj Dönemi',
-                              ),
-                              _buildRoadmapDivider(),
-                              _buildRoadmapItem(
-                                step: 5,
-                                text: '5. Defter Teslimi & AI Analiz',
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // BELGE ŞABLONLARI
-                        const Text(
-                          'Belge Şablonları',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF212121),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              _buildDocumentCard(
-                                icon: Icons.edit_document,
-                                title: 'Staj Defteri',
-                                subtitle: 'Word İndir',
-                                color: primaryColor,
-                              ),
-                              _buildDocumentCard(
-                                icon: Icons.picture_as_pdf,
-                                title: 'Kabul Formu',
-                                subtitle: 'PDF İndir',
-                                color: const Color(0xFF1976D2),
-                              ),
-                              _buildDocumentCard(
-                                icon: Icons.info_outline,
-                                title: 'Sigorta',
-                                subtitle: 'Bilgi Al',
-                                color: const Color(0xFF388E3C),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // DUYURULAR
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Duyurular',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF212121),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {},
-                              child: Text(
-                                'Tümünü Gör',
-                                style: TextStyle(
-                                  color: primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE3F2FD),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            '📢 2026 Yaz Stajı başvuruları 15 Mayıs\'ta sona erecektir.',
-                            style: TextStyle(
-                              color: Color(0xFF1565C0),
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 100),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+      
+      // ARTIK BODY DİNAMİK OLARAK SEKME METODUNDAN GELİYOR
+      body: _getSelectedPage(),
 
       // ALT NAVİGASYON
       bottomNavigationBar: Container(
@@ -378,6 +197,11 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
             selectedItemColor: primaryColor,
             unselectedItemColor: Colors.grey,
             type: BottomNavigationBarType.fixed,
+            
+            // TIKLAMA OLAYLARI BURAYA BAĞLANDI
+            currentIndex: _selectedIndex,
+            onTap: _onItemTapped,
+            
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),
@@ -404,6 +228,221 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
         ),
       ),
     );
+  }
+
+  // ========== ESKİ ANA SAYFA İÇERİĞİ BURAYA TAŞINDI ==========
+  Widget _buildHomeContent() {
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Column(
+            children: [
+              // ÜST HEADER
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
+                decoration: BoxDecoration(
+                  color: primaryColor,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Merhaba, $_firstName 👋',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _department,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(
+                        Icons.notifications_outlined,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: Colors.white,
+                      child: Text(
+                        _firstName.isNotEmpty ? _firstName[0] : '?',
+                        style: TextStyle(
+                          color: primaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // SCROLLABLE İÇERİK
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // BAŞVURU DURUMU VEYA YENİ BAŞVURU
+                      _buildApplicationCard(),
+                      const SizedBox(height: 24),
+
+                      // STAJ YOL HARİTASI
+                      const Text(
+                        'Staj Yol Haritası',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF212121),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0F0F0),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildRoadmapItem(
+                              step: 1,
+                              text: '1. Başvuru Oluştur',
+                            ),
+                            _buildRoadmapDivider(),
+                            _buildRoadmapItem(
+                              step: 2,
+                              text: '2. Akademisyen Onayı',
+                            ),
+                            _buildRoadmapDivider(),
+                            _buildRoadmapItem(
+                              step: 3,
+                              text: '3. SGK / Sigorta Girişi',
+                            ),
+                            _buildRoadmapDivider(),
+                            _buildRoadmapItem(
+                              step: 4,
+                              text: '4. Staj Dönemi',
+                            ),
+                            _buildRoadmapDivider(),
+                            _buildRoadmapItem(
+                              step: 5,
+                              text: '5. Defter Teslimi & AI Analiz',
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // BELGE ŞABLONLARI
+                      const Text(
+                        'Belge Şablonları',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF212121),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildDocumentCard(
+                              icon: Icons.edit_document,
+                              title: 'Staj Defteri',
+                              subtitle: 'Word İndir',
+                              color: primaryColor,
+                            ),
+                            _buildDocumentCard(
+                              icon: Icons.picture_as_pdf,
+                              title: 'Kabul Formu',
+                              subtitle: 'PDF İndir',
+                              color: const Color(0xFF1976D2),
+                            ),
+                            _buildDocumentCard(
+                              icon: Icons.info_outline,
+                              title: 'Sigorta',
+                              subtitle: 'Bilgi Al',
+                              color: const Color(0xFF388E3C),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // DUYURULAR
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Duyurular',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF212121),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {},
+                            child: Text(
+                              'Tümünü Gör',
+                              style: TextStyle(
+                                color: primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE3F2FD),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          '📢 2026 Yaz Stajı başvuruları 15 Mayıs\'ta sona erecektir.',
+                          style: TextStyle(
+                            color: Color(0xFF1565C0),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 100),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
   }
 
   // ========== BAŞVURU KARTI ==========

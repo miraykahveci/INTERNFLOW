@@ -111,7 +111,7 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
         type = 'success';
       } else {
         message = 'Staj başvurunuz reddedildi. ${reason ?? ''}';
-        type = 'alert';
+        type = 'error';
       }
 
       await Supabase.instance.client.from('notifications').insert({
