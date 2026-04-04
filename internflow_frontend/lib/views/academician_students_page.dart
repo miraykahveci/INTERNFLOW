@@ -299,7 +299,6 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
                 _buildFilterChip('Reddedilen ($_rejectedCount)', 'rejected'),
                 _buildFilterChip('Stajda ($_activeCount)', 'active'),
                 _buildFilterChip('Defter Teslimi ($_notebookCount)', 'notebook'),
-                _buildFilterChip('Reddedilen ($_rejectedCount)', 'rejected'),
                 _buildFilterChip('Tamamlanan ($_completedCount)', 'completed'),
               ],
             ),
