@@ -24,6 +24,8 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
   int _activeCount = 0;
   int _notebookCount = 0;
   int _completedCount = 0;
+  int _approvedCount = 0;
+  int _rejectedCount = 0;
 
   @override
   void initState() {
@@ -38,70 +40,85 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
   }
 
   Future<void> _loadStudents() async {
-    setState(() => _isLoading = true);
-    try {
-      final userId = Supabase.instance.client.auth.currentUser!.id;
+  setState(() => _isLoading = true);
+  try {
+    final userId = Supabase.instance.client.auth.currentUser!.id;
 
-      final response = await Supabase.instance.client
-          .from('internship')
-          .select(
-              '*, users!internship_student_id_fkey(full_name, student_number, department)')
-          .eq('academician_id', userId)
-          .order('created_at', ascending: false);
+    final response = await Supabase.instance.client
+        .from('internship')
+        .select(
+            '*, users!internship_student_id_fkey(full_name, student_number, department)')
+        .eq('academician_id', userId)
+        .order('created_at', ascending: false);
 
-      final students = List<Map<String, dynamic>>.from(response);
+    final allInternships = List<Map<String, dynamic>>.from(response);
 
-      
-      int pending = 0, active = 0, notebook = 0, completed = 0;
-      for (var s in students) {
-        switch (s['status']) {
-          case 'pending':
-            pending++;
-            break;
-          case 'approved':
-            pending++;
-            break;
-          case 'active':
-            active++;
-            break;
-          case 'completed':
-            completed++;
-            break;
-        }
+    // Her öğrencinin sadece son başvurusunu al (student_id'ye göre)
+    final Map<String, Map<String, dynamic>> uniqueStudents = {};
+    for (var intern in allInternships) {
+      final studentId = intern['student_id'] as String;
+      // İlk gelen zaten en yeni (created_at desc sıralı)
+      if (!uniqueStudents.containsKey(studentId)) {
+        uniqueStudents[studentId] = intern;
       }
-
-      setState(() {
-        _allStudents = students;
-        _pendingCount = pending;
-        _activeCount = active;
-        _notebookCount = notebook;
-        _completedCount = completed;
-        _isLoading = false;
-      });
-
-      _applyFilters();
-    } catch (e) {
-      debugPrint('Öğrenci listesi yüklenemedi: $e');
-      setState(() => _isLoading = false);
     }
+
+    final students = uniqueStudents.values.toList();
+
+    // Sayaçları hesapla
+    int pending = 0, approved = 0, active = 0, completed = 0, rejected = 0;
+    for (var s in students) {
+      switch (s['status']) {
+        case 'pending':
+          pending++;
+          break;
+        case 'approved':
+          approved++;
+          break;
+        case 'active':
+          active++;
+          break;
+        case 'completed':
+          completed++;
+          break;
+        case 'rejected':
+          rejected++;
+          break;
+      }
+    }
+
+    setState(() {
+      _allStudents = students;
+      _pendingCount = pending;
+      _approvedCount = approved;
+      _activeCount = active;
+      _completedCount = completed;
+      _rejectedCount = rejected;
+      _isLoading = false;
+    });
+
+    _applyFilters();
+  } catch (e) {
+    debugPrint('Öğrenci listesi yüklenemedi: $e');
+    setState(() => _isLoading = false);
   }
+}
 
   void _applyFilters() {
     List<Map<String, dynamic>> result = _allStudents;
 
     
     if (_activeFilter == 'pending') {
-      result =
-          result.where((s) => s['status'] == 'pending' || s['status'] == 'approved').toList();
-    } else if (_activeFilter == 'active') {
-      result = result.where((s) => s['status'] == 'active').toList();
-    } else if (_activeFilter == 'notebook') {
-      result = result
-          .where((s) => s['status'] == 'completed' && s['notebook_submitted'] == true)
-          .toList();
-    } else if (_activeFilter == 'completed') {
-      result = result.where((s) => s['status'] == 'completed').toList();
-    }
+  result = result.where((s) => s['status'] == 'pending').toList();
+} else if (_activeFilter == 'approved') {
+  result = result.where((s) => s['status'] == 'approved').toList();
+} else if (_activeFilter == 'active') {
+  result = result.where((s) => s['status'] == 'active').toList();
+} else if (_activeFilter == 'rejected') {
+  result = result.where((s) => s['status'] == 'rejected').toList();
+} else if (_activeFilter == 'completed') {
+  result = result.where((s) => s['status'] == 'completed').toList();
+}
 
     
     if (_searchQuery.isNotEmpty) {
@@ -277,13 +294,12 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
             child: Row(
               children: [
                 _buildFilterChip('Tümü (${_allStudents.length})', 'all'),
-                _buildFilterChip(
-                    'Onay Bekleyen ($_pendingCount)', 'pending'),
+                _buildFilterChip('Onay Bekleyen ($_pendingCount)', 'pending'),
                 _buildFilterChip('Stajda ($_activeCount)', 'active'),
-                _buildFilterChip(
-                    'Defter Teslimi ($_notebookCount)', 'notebook'),
-                _buildFilterChip(
-                    'Tamamlanan ($_completedCount)', 'completed'),
+                _buildFilterChip('Onaylanan ($_approvedCount)', 'approved'),
+                _buildFilterChip('Defter Teslimi ($_notebookCount)', 'notebook'),
+                _buildFilterChip('Reddedilen ($_rejectedCount)', 'rejected'),
+                _buildFilterChip('Tamamlanan ($_completedCount)', 'completed'),
               ],
             ),
           ),
