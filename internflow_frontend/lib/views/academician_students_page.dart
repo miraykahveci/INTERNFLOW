@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'academician_student_detail_page.dart';
 
 class AcademicianStudentsPage extends StatefulWidget {
   const AcademicianStudentsPage({super.key});
@@ -53,11 +54,11 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
 
     final allInternships = List<Map<String, dynamic>>.from(response);
 
-    // Her öğrencinin sadece son başvurusunu al (student_id'ye göre)
+  
     final Map<String, Map<String, dynamic>> uniqueStudents = {};
     for (var intern in allInternships) {
       final studentId = intern['student_id'] as String;
-      // İlk gelen zaten en yeni (created_at desc sıralı)
+      
       if (!uniqueStudents.containsKey(studentId)) {
         uniqueStudents[studentId] = intern;
       }
@@ -378,7 +379,12 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
-          // TODO: Öğrenci detay sayfasına yönlendir
+         Navigator.push(
+         context,
+         MaterialPageRoute(
+         builder: (context) => AcademicianStudentDetailPage(internship: internship),
+    ),
+  );
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -526,7 +532,13 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
                     color: primaryColor,
                     isBold: true,
                     onTap: () {
-                      // TODO: Öğrenci detay sayfasına yönlendir
+                      Navigator.push(
+                      context,
+                     MaterialPageRoute(
+                     builder: (context) => AcademicianStudentDetailPage(internship: internship),
+                        ),
+                      );
+                      
                     },
                   ),
                 ],
