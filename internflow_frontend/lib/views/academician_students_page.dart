@@ -199,89 +199,87 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      // 1. DEĞİŞİKLİK: O pembemsi rengi silip yerine tertemiz açık bir gri ekledik.
+      backgroundColor: const Color(0xFFF4F6F8), 
       body: Column(
         children: [
-          // HEADER
+          // HEADER (Daha ferah ve modern)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(20, 56, 20, 20),
-            decoration: BoxDecoration(color: primaryColor),
+            padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
+            decoration: BoxDecoration(
+              color: primaryColor,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Başlık
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.people, color: Colors.white, size: 26),
-                    SizedBox(width: 12),
-                    Text(
+                    const Icon(Icons.people_alt_outlined, color: Colors.white, size: 28),
+                    const SizedBox(width: 12),
+                    const Text(
                       'Öğrencilerim',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 22,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   'Toplam: ${_allStudents.length} Kayıtlı Öğrenci',
-                  style: const TextStyle(
-                    color: Color(0xFFFFCDD2),
-                    fontSize: 12,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
 
-        
+          // ARAMA ÇUBUĞU (Kırmızı alanla bütünleşik ve modern)
           Transform.translate(
-            offset: const Offset(0, -16),
+            offset: const Offset(0, -20),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Card(
-                elevation: 6,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  child: Row(
-                    children: [
-                      Icon(Icons.search, color: primaryColor, size: 22),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: (value) {
-                            _searchQuery = value;
-                            _applyFilters();
-                          },
-                          decoration: const InputDecoration(
-                            hintText: 'İsim, numara veya firma ara...',
-                            hintStyle: TextStyle(
-                              color: Color(0xFF90A4AE),
-                              fontSize: 14,
-                            ),
-                            border: InputBorder.none,
-                          ),
-                        ),
-                      ),
-                      if (_searchQuery.isNotEmpty)
-                        GestureDetector(
-                          onTap: () {
-                            _searchController.clear();
-                            _searchQuery = '';
-                            _applyFilters();
-                          },
-                          child: const Icon(Icons.close,
-                              color: Color(0xFF90A4AE), size: 20),
-                        ),
-                    ],
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    _searchQuery = value;
+                    _applyFilters();
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'İsim, numara veya firma ara...',
+                    hintStyle: const TextStyle(color: Color(0xFF95A5A6), fontSize: 14),
+                    prefixIcon: Icon(Icons.search, color: primaryColor, size: 22),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? GestureDetector(
+                            onTap: () {
+                              _searchController.clear();
+                              _searchQuery = '';
+                              _applyFilters();
+                            },
+                            child: const Icon(Icons.close, color: Color(0xFF95A5A6), size: 20),
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
               ),
@@ -289,39 +287,38 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
           ),
 
           // FİLTRE CHİP'LERİ
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                _buildFilterChip('Tümü (${_allStudents.length})', 'all'),
-                _buildFilterChip('Onay Bekleyen ($_pendingCount)', 'pending'),
-                _buildFilterChip('Onaylanan ($_approvedCount)', 'approved'),
-                _buildFilterChip('Reddedilen ($_rejectedCount)', 'rejected'),
-                _buildFilterChip('Stajda ($_activeCount)', 'active'),
-                _buildFilterChip('Defter Teslimi ($_notebookCount)', 'notebook'),
-                _buildFilterChip('Tamamlanan ($_completedCount)', 'completed'),
-              ],
+          Transform.translate(
+            offset: const Offset(0, -8),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  _buildFilterChip('Tümü (${_allStudents.length})', 'all'),
+                  _buildFilterChip('Onay Bekleyen ($_pendingCount)', 'pending'),
+                  _buildFilterChip('Onaylanan ($_approvedCount)', 'approved'),
+                  _buildFilterChip('Stajda ($_activeCount)', 'active'),
+                  _buildFilterChip('Tamamlanan ($_completedCount)', 'completed'),
+                  _buildFilterChip('Reddedilen ($_rejectedCount)', 'rejected'),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 12),
 
           // ÖĞRENCİ LİSTESİ
           Expanded(
             child: _isLoading
-                ? Center(
-                    child: CircularProgressIndicator(color: primaryColor))
+                ? Center(child: CircularProgressIndicator(color: primaryColor))
                 : _filteredStudents.isEmpty
                     ? _buildEmptyState()
                     : RefreshIndicator(
                         color: primaryColor,
                         onRefresh: _loadStudents,
                         child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                           itemCount: _filteredStudents.length,
                           itemBuilder: (context, index) {
-                            return _buildStudentCard(
-                                _filteredStudents[index]);
+                            return _buildStudentCard(_filteredStudents[index]);
                           },
                         ),
                       ),
@@ -340,30 +337,34 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
         _applyFilters();
       },
       child: Container(
-        margin: const EdgeInsets.only(right: 8),
+        margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? primaryColor : const Color(0xFFECEFF1),
+          color: isActive ? primaryColor : Colors.white,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isActive ? primaryColor : const Color(0xFFE9ECEF)),
+          boxShadow: isActive
+              ? [BoxShadow(color: primaryColor.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))]
+              : [],
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isActive ? Colors.white : const Color(0xFF546E7A),
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+            color: isActive ? Colors.white : const Color(0xFF7F8C8D),
+            fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+            fontSize: 13,
           ),
         ),
       ),
     );
   }
 
-  // ========== ÖĞRENCİ KARTI ==========
+  // 2. DEĞİŞİKLİK: Card yerine Container kullanarak rengi zorla BEYAZ yaptık.
+  // ========== ÖĞRENCİ KARTI (Temiz Beyaz Tasarım) ==========
   Widget _buildStudentCard(Map<String, dynamic> internship) {
     final student = internship['users'] as Map<String, dynamic>?;
     final studentName = student?['full_name'] ?? 'Bilinmeyen';
-    final studentNumber =
-        student?['student_number']?.toString() ?? '-';
+    final studentNumber = student?['student_number']?.toString() ?? '-';
     final department = student?['department'] ?? '-';
     final companyName = internship['company_name'] ?? '-';
     final status = internship['status'] as String? ?? 'pending';
@@ -372,178 +373,218 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
     final startDate = internship['start_date'] ?? '';
     final endDate = internship['end_date'] ?? '';
 
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-         Navigator.push(
-         context,
-         MaterialPageRoute(
-         builder: (context) => AcademicianStudentDetailPage(internship: internship),
-    ),
-  );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: primaryColor.withValues(alpha: 0.12),
-                    child: Text(
-                      studentName.isNotEmpty ? studentName[0].toUpperCase() : '?',
-                      style: TextStyle(
-                        color: primaryColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white, // Kırmızımsı arka planı ezen kod burası!
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF1F2F6), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AcademicianStudentDetailPage(internship: internship),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                // ÜST KISIM: Profil ve Statü
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8F9FA),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFE9ECEF)),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          studentName,
+                      child: Center(
+                        child: Text(
+                          studentName.isNotEmpty ? studentName[0].toUpperCase() : '?',
                           style: const TextStyle(
-                            fontSize: 15,
+                            color: Color(0xFF34495E),
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF37474F),
+                            fontSize: 20,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            studentName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2C3E50),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$studentNumber | $department',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF7F8C8D),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: statusInfo['bgColor'],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        statusInfo['label'],
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: statusInfo['color'],
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // ORTA KISIM: Şirket ve Tarih
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.business, size: 16, color: Color(0xFF95A5A6)),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              companyName,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF34495E),
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      flex: 4,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          const Icon(Icons.calendar_today, size: 14, color: Color(0xFFBDC3C7)),
+                          const SizedBox(width: 6),
+                          Text(
+                            startDate.isNotEmpty ? startDate : '-',
+                            style: const TextStyle(fontSize: 12, color: Color(0xFF7F8C8D)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // İLERLEME ÇUBUĞU
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Staj İlerlemesi',
+                          style: TextStyle(fontSize: 11, color: Color(0xFF95A5A6), fontWeight: FontWeight.w600),
+                        ),
                         Text(
-                          '$studentNumber | $department',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF90A4AE),
+                          '%${(progress * 100).toInt()}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: statusInfo['color'],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: statusInfo['bgColor'],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      statusInfo['label'],
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: statusInfo['color'],
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 6,
+                        backgroundColor: const Color(0xFFF1F2F6),
+                        valueColor: AlwaysStoppedAnimation<Color>(statusInfo['color']),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-
-              Row(
-                children: [
-                  const Icon(Icons.business, size: 14, color: Color(0xFF90A4AE)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      companyName,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF546E7A),
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Icon(Icons.calendar_today,
-                      size: 12, color: Color(0xFF90A4AE)),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$startDate - $endDate',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF90A4AE),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  const Text(
-                    'Staj İlerlemesi',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF90A4AE),
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '%${(progress * 100).toInt()}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: statusInfo['color'],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 5,
-                  backgroundColor: const Color(0xFFECEFF1),
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(statusInfo['color']),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _buildActionButton(
-                    icon: Icons.phone,
-                    label: 'Ara',
-                    color: const Color(0xFF546E7A),
-                    onTap: () {},
-                  ),
-                  const SizedBox(width: 12),
-                  _buildActionButton(
-                    icon: Icons.email,
-                    label: 'E-posta',
-                    color: const Color(0xFF546E7A),
-                    onTap: () {},
-                  ),
-                  const Spacer(),
-                  _buildActionButton(
-                    icon: Icons.arrow_forward,
-                    label: 'DETAY',
-                    color: primaryColor,
-                    isBold: true,
-                    onTap: () {
-                      Navigator.push(
-                      context,
-                     MaterialPageRoute(
-                     builder: (context) => AcademicianStudentDetailPage(internship: internship),
-                        ),
-                      );
-                      
-                    },
-                  ),
-                ],
-              ),
-            ],
+                const SizedBox(height: 20),
+
+                // ALT KISIM: Aksiyon Butonları
+                Row(
+                  children: [
+                    _buildActionButton(
+                      icon: Icons.phone_outlined,
+                      label: 'Ara',
+                      color: const Color(0xFF7F8C8D),
+                      onTap: () {},
+                    ),
+                    const SizedBox(width: 20),
+                    _buildActionButton(
+                      icon: Icons.email_outlined,
+                      label: 'E-posta',
+                      color: const Color(0xFF7F8C8D),
+                      onTap: () {},
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            'DETAY',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryColor),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.arrow_forward_ios, size: 12, color: primaryColor),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -556,20 +597,19 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
     required String label,
     required Color color,
     required VoidCallback onTap,
-    bool isBold = false,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Row(
         children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               color: color,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -583,16 +623,13 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.people_outline, size: 64, color: Colors.grey[300]),
+          Icon(Icons.person_search_outlined, size: 64, color: Colors.grey[300]),
           const SizedBox(height: 16),
           Text(
             _searchQuery.isNotEmpty
-                ? 'Aramanızla eşleşen öğrenci bulunamadı'
-                : 'Bu kategoride öğrenci bulunmuyor',
-            style: TextStyle(
-              color: Colors.grey[500],
-              fontSize: 14,
-            ),
+                ? 'Aramanızla eşleşen öğrenci bulunamadı.'
+                : 'Bu kategoride henüz öğrenci kaydı yok.',
+            style: TextStyle(color: Colors.grey[500], fontSize: 15, fontWeight: FontWeight.w500),
           ),
         ],
       ),

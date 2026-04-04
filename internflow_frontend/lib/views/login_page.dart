@@ -144,7 +144,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     final String inputLabel = _tabController.index == 0
         ? "Okul Numarası"
-        : "Kullanıcı Adı (Örn: haldun)";
+        : "Kullanıcı Adı";
 
     final IconData inputIcon = _tabController.index == 0
         ? Icons.numbers
