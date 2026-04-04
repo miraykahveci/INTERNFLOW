@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'academician_students_page.dart';
+import 'academician_profile_page.dart';
 
 class AcademicianDashboardPage extends StatefulWidget {
   const AcademicianDashboardPage({super.key});
@@ -122,7 +123,7 @@ Widget _getSelectedPage() {
         ),
       );
     case 3:
-      return const Center(child: Text('Profil sayfası yapım aşamasında'));
+       return const AcademicianProfilePage();
     default:
       return _buildHomeContent();
   }
