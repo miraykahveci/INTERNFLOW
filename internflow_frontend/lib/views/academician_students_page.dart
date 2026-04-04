@@ -295,8 +295,9 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
               children: [
                 _buildFilterChip('Tümü (${_allStudents.length})', 'all'),
                 _buildFilterChip('Onay Bekleyen ($_pendingCount)', 'pending'),
-                _buildFilterChip('Stajda ($_activeCount)', 'active'),
                 _buildFilterChip('Onaylanan ($_approvedCount)', 'approved'),
+                _buildFilterChip('Reddedilen ($_rejectedCount)', 'rejected'),
+                _buildFilterChip('Stajda ($_activeCount)', 'active'),
                 _buildFilterChip('Defter Teslimi ($_notebookCount)', 'notebook'),
                 _buildFilterChip('Reddedilen ($_rejectedCount)', 'rejected'),
                 _buildFilterChip('Tamamlanan ($_completedCount)', 'completed'),
