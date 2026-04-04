@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'academician_students_page.dart';
 
 class AcademicianDashboardPage extends StatefulWidget {
   const AcademicianDashboardPage({super.key});
