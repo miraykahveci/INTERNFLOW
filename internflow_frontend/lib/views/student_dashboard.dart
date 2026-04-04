@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'application_form_page.dart';
-import 'student_process_page.dart'; // YENİ SAYFAMIZ EKLİ ✅
+import 'student_process_page.dart'; 
 import 'student_profile_page.dart';
 
 class StudentDashboardPage extends StatefulWidget {
@@ -14,7 +14,7 @@ class StudentDashboardPage extends StatefulWidget {
 class _StudentDashboardPageState extends State<StudentDashboardPage> {
   final Color primaryColor = const Color(0xFF6A0F0F);
 
-  int _selectedIndex = 0; // Hangi sekmede olduğumuzu tutar
+  int _selectedIndex = 0; 
   String _fullName = '';
   String _department = '';
   bool _isLoading = true;
@@ -81,13 +81,11 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
       case 2:
         return const Center(child: Text('Dosyalar yapım aşamasında 🛠️'));
       case 3:
-        return const StudentProfilePage(); // <--- İŞTE BURAYA PROFİLİ EKLEDİK ✅
+        return const StudentProfilePage(); 
       default:
         return _buildHomeContent();
     }
   }
-
-  // ==========================================================
 
   // Yol haritası adımlarının durumunu belirle
   bool _isStepCompleted(int step) {
@@ -175,7 +173,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       
-      // ARTIK BODY DİNAMİK OLARAK SEKME METODUNDAN GELİYOR
+  
       body: _getSelectedPage(),
 
       // ALT NAVİGASYON
