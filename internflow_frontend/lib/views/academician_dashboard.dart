@@ -20,6 +20,7 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
   int _pendingCount = 0;
   int _sgkPendingCount = 0;
   int _activeCount = 0;
+  int _selectedIndex = 0;
 
   List<Map<String, dynamic>> _pendingItems = [];
   String _activeFilter = 'all';
@@ -92,6 +93,40 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
     if (_activeFilter == 'all') return _pendingItems;
     return _pendingItems.where((item) => item['type'] == _activeFilter).toList();
   }
+
+void _onItemTapped(int index) {
+  setState(() {
+    _selectedIndex = index;
+  });
+}
+
+Widget _getSelectedPage() {
+  switch (_selectedIndex) {
+    case 0:
+      return _buildHomeContent();
+    case 1:
+      return const AcademicianStudentsPage();
+    case 2:
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.auto_awesome, size: 64, color: Color(0xFFCCCCCC)),
+            SizedBox(height: 16),
+            Text('AI Analiz Laboratuvarı',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF546E7A))),
+            SizedBox(height: 8),
+            Text('Bu modül final döneminde aktifleşecektir.',
+                style: TextStyle(color: Color(0xFF90A4AE), fontSize: 13)),
+          ],
+        ),
+      );
+    case 3:
+      return const Center(child: Text('Profil sayfası yapım aşamasında'));
+    default:
+      return _buildHomeContent();
+  }
+}
 
   Future<void> _updateInternshipStatus(String internId, String newStatus, {String? reason}) async {
     try {
@@ -343,229 +378,7 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(20, 56, 20, 20),
-                  decoration: BoxDecoration(color: primaryColor),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 25,
-                        backgroundColor: Colors.white,
-                        child: Text(
-                          _fullName.isNotEmpty ? _fullName[0] : '?',
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _fullName,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              _title,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.notifications_outlined,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Card(
-                          elevation: 8,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            child: Row(
-                              children: [
-                                Icon(Icons.search, color: primaryColor),
-                                const SizedBox(width: 12),
-                                const Expanded(
-                                  child: TextField(
-                                    decoration: InputDecoration(
-                                      hintText: 'Öğrenci Adı, No veya Bölüm Ara...',
-                                      hintStyle: TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 14,
-                                      ),
-                                      border: InputBorder.none,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        Row(
-                          children: [
-                            _buildStatCard(
-                              value: _pendingCount.toString(),
-                              label: 'Bekleyen\nBaşvuru',
-                              bgColor: const Color(0xFFFFF3E0),
-                              textColor: const Color(0xFFE65100),
-                            ),
-                            const SizedBox(width: 8),
-                            _buildStatCard(
-                              value: _sgkPendingCount.toString(),
-                              label: 'SGK\nGirişi',
-                              bgColor: const Color(0xFFF3E5F5),
-                              textColor: const Color(0xFF7B1FA2),
-                            ),
-                            const SizedBox(width: 8),
-                            _buildStatCard(
-                              value: _activeCount.toString(),
-                              label: 'Aktif\nStajyer',
-                              bgColor: const Color(0xFFE8F5E9),
-                              textColor: const Color(0xFF2E7D32),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        Card(
-                          elevation: 2,
-                          color: const Color(0xFFE8EAF6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Row(
-                              children: [
-                                Icon(Icons.auto_awesome,
-                                    color: Colors.indigo[700], size: 24),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'AI Analiz Raporu',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.indigo[700],
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Analiz modülü hazırlanıyor...',
-                                        style: TextStyle(
-                                          color: Colors.indigo[400],
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(Icons.arrow_forward_ios,
-                                    size: 14, color: Colors.indigo[400]),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              _buildFilterChip('Tümü', 'all'),
-                              _buildFilterChip('Başvurular ($_pendingCount)', 'pending'),
-                              _buildFilterChip('SGK ($_sgkPendingCount)', 'sgk'),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        const Text(
-                          'Bekleyen İşlemler',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF37474F),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        if (_filteredItems.isEmpty)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(32),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              children: [
-                                Icon(Icons.check_circle_outline,
-                                    size: 48, color: Colors.grey[300]),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Bekleyen işlem bulunmuyor',
-                                  style: TextStyle(
-                                    color: Colors.grey[500],
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        else
-                          ..._filteredItems.map((item) => _buildPendingItemCard(item)),
-
-                        const SizedBox(height: 100),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
+      body: _getSelectedPage(),
       bottomNavigationBar: Container(
         margin: const EdgeInsets.fromLTRB(24, 0, 24, 24),
         decoration: BoxDecoration(
@@ -585,6 +398,8 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
             selectedItemColor: primaryColor,
             unselectedItemColor: Colors.grey,
             type: BottomNavigationBarType.fixed,
+            currentIndex: _selectedIndex,
+             onTap: _onItemTapped,
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.dashboard_outlined),
@@ -612,6 +427,199 @@ class _AcademicianDashboardPageState extends State<AcademicianDashboardPage> {
       ),
     );
   }
+Widget _buildHomeContent() {
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 56, 20, 20),
+                decoration: BoxDecoration(color: primaryColor),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 25,
+                      backgroundColor: Colors.white,
+                      child: Text(
+                        _fullName.isNotEmpty ? _fullName[0] : '?',
+                        style: TextStyle(
+                          color: primaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_fullName,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold)),
+                          Text(_title,
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(Icons.notifications_outlined,
+                          color: Colors.white, size: 22),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Card(
+                        elevation: 8,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          child: Row(
+                            children: [
+                              Icon(Icons.search, color: primaryColor),
+                              const SizedBox(width: 12),
+                              const Expanded(
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    hintText:
+                                        'Öğrenci Adı, No veya Bölüm Ara...',
+                                    hintStyle: TextStyle(
+                                        color: Colors.grey, fontSize: 14),
+                                    border: InputBorder.none,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          _buildStatCard(
+                            value: _pendingCount.toString(),
+                            label: 'Bekleyen\nBaşvuru',
+                            bgColor: const Color(0xFFFFF3E0),
+                            textColor: const Color(0xFFE65100),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildStatCard(
+                            value: _sgkPendingCount.toString(),
+                            label: 'SGK\nGirişi',
+                            bgColor: const Color(0xFFF3E5F5),
+                            textColor: const Color(0xFF7B1FA2),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildStatCard(
+                            value: _activeCount.toString(),
+                            label: 'Aktif\nStajyer',
+                            bgColor: const Color(0xFFE8F5E9),
+                            textColor: const Color(0xFF2E7D32),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Card(
+                        elevation: 2,
+                        color: const Color(0xFFE8EAF6),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              Icon(Icons.auto_awesome,
+                                  color: Colors.indigo[700], size: 24),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('AI Analiz Raporu',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.indigo[700],
+                                            fontSize: 13)),
+                                    Text('Analiz modülü hazırlanıyor...',
+                                        style: TextStyle(
+                                            color: Colors.indigo[400],
+                                            fontSize: 11)),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.arrow_forward_ios,
+                                  size: 14, color: Colors.indigo[400]),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildFilterChip('Tümü', 'all'),
+                            _buildFilterChip('Başvurular ($_pendingCount)', 'pending'),
+                            _buildFilterChip('SGK ($_sgkPendingCount)', 'sgk'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Bekleyen İşlemler',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF37474F))),
+                      const SizedBox(height: 12),
+                      if (_filteredItems.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(Icons.check_circle_outline,
+                                  size: 48, color: Colors.grey[300]),
+                              const SizedBox(height: 12),
+                              Text('Bekleyen işlem bulunmuyor',
+                                  style: TextStyle(
+                                      color: Colors.grey[500], fontSize: 14)),
+                            ],
+                          ),
+                        )
+                      else
+                        ..._filteredItems
+                            .map((item) => _buildPendingItemCard(item)),
+                      const SizedBox(height: 100),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+  }
+
 
   Widget _buildStatCard({
     required String value,
