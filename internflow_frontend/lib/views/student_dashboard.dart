@@ -4,6 +4,7 @@ import 'application_form_page.dart';
 import 'student_process_page.dart'; 
 import 'student_profile_page.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'student_files_page.dart';
 
 class StudentDashboardPage extends StatefulWidget {
   const StudentDashboardPage({super.key});
@@ -82,11 +83,11 @@ Future<void> _downloadTemplate(String fileName) async {
   Widget _getSelectedPage() {
     switch (_selectedIndex) {
       case 0:
-        return _buildHomeContent(); // Ana Sayfa
+        return _buildHomeContent(); 
       case 1:
-        return const StudentProcessPage(); // Sürecim
+        return const StudentProcessPage();
       case 2:
-        return const Center(child: Text('Dosyalar yapım aşamasında 🛠️'));
+        return const StudentFilesPage();
       case 3:
         return const StudentProfilePage(); 
       default:
