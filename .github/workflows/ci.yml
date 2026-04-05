@@ -46,7 +46,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
-          pytest tests/ -v --co 2>/dev/null && pytest tests/ -v --cov=app --cov-report=term-missing || echo "No tests found or tests failed"
+          pytest tests/ -v --cov=app --cov-report=term-missing
 
   # ---- FRONTEND BUILD KONTROLÜ ----
   frontend-build:
@@ -70,7 +70,7 @@ jobs:
         run: flutter pub get
 
       - name: Analyze code
-        run: flutter analyze --no-fatal-infos || true
+        run: flutter analyze --no-fatal-infos
 
       - name: Run Flutter tests
-        run: flutter test || echo "No tests found"
+        run: flutter test
