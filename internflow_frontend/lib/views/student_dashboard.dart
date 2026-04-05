@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'application_form_page.dart';
 import 'student_process_page.dart'; 
 import 'student_profile_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class StudentDashboardPage extends StatefulWidget {
   const StudentDashboardPage({super.key});
@@ -29,6 +30,12 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
     _loadAllData();
   }
 
+  
+Future<void> _downloadTemplate(String fileName) async {
+  final url = '${Supabase.instance.client.rest.url.replaceAll('/rest/v1', '')}/storage/v1/object/public/templates/$fileName';
+  final uri = Uri.parse(url);
+  await launchUrl(uri, mode: LaunchMode.externalApplication);
+}
   Future<void> _loadAllData() async {
     setState(() => _isLoading = true);
     try {
@@ -376,15 +383,17 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                             _buildDocumentCard(
                               icon: Icons.edit_document,
                               title: 'Staj Defteri',
-                              subtitle: 'Word İndir',
-                              color: primaryColor,
-                            ),
-                            _buildDocumentCard(
-                              icon: Icons.picture_as_pdf,
-                              title: 'Kabul Formu',
                               subtitle: 'PDF İndir',
-                              color: const Color(0xFF1976D2),
-                            ),
+                              color: primaryColor,
+                               onTap: () => _downloadTemplate('staj_gunlugu.pdf'),
+                                ),
+                               _buildDocumentCard(
+                               icon: Icons.picture_as_pdf,
+                                title: 'Kabul Formu',
+                                subtitle: 'PDF İndir',
+                                color: const Color(0xFF1976D2),
+                                onTap: () => _downloadTemplate('kabul_formu.pdf'),
+                                  ),
                             _buildDocumentCard(
                               icon: Icons.info_outline,
                               title: 'Sigorta',
@@ -723,12 +732,15 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
   }
 
   Widget _buildDocumentCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-  }) {
-    return Container(
+  required IconData icon,
+  required String title,
+  required String subtitle,
+  required Color color,
+  VoidCallback? onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
       width: 140,
       height: 100,
       margin: const EdgeInsets.only(right: 16),
@@ -765,6 +777,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
