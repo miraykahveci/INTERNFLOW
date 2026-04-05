@@ -19,6 +19,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   
   bool _isLoading = false;
   bool _rememberMe = false;
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -140,197 +141,358 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     }
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
-    final String inputLabel = _tabController.index == 0
-        ? "Okul Numarası"
-        : "Kullanıcı Adı";
-
-    final IconData inputIcon = _tabController.index == 0
-        ? Icons.numbers
-        : Icons.person_outline;
-
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
-          ),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 80),
-              Image.asset(
-              'assets/images/app_logo.png',
-                 width: 120,
-                  height: 120,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth >= 900) {
+            return _buildWebLayout();
+          }
+          return _buildMobileLayout();
+        },
+      ),
+    );
+  }
+
+  // ========== WEB LAYOUT ==========
+  Widget _buildWebLayout() {
+    return Row(
+      children: [
+        // SOL PANEL — Branding
+        Expanded(
+          flex: 5,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [primaryColor, const Color(0xFF4A0A0A)],
+              ),
+            ),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(48),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Logo
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Image.asset(
+                          'assets/images/app_logo.png',
+                          width: 80,
+                          height: 80,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.school, color: Colors.white, size: 48),
                         ),
-              const Text(
-                "InternFlow",
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 0.03,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black26,
-                      offset: Offset(2, 2),
-                      blurRadius: 4,
-                    )
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    const Text(
+                      'InternFlow',
+                      style: TextStyle(
+                        fontSize: 42,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Yapay Zeka Destekli Staj Takip Sistemi',
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                    ),
+                    const SizedBox(height: 48),
+                    // Özellik listesi
+                    _buildFeatureItem(Icons.assignment, 'Staj başvuru ve onay yönetimi'),
+                    _buildFeatureItem(Icons.cloud_upload, 'Dijital belge yükleme ve takip'),
+                    _buildFeatureItem(Icons.auto_awesome, 'AI destekli staj defteri analizi'),
+                    _buildFeatureItem(Icons.timeline, 'Gerçek zamanlı süreç takibi'),
+                    const SizedBox(height: 48),
+                    // Alt bilgi
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'İstanbul Rumeli Üniversitesi | Bilgisayar Mühendisliği',
+                        style: TextStyle(color: Colors.white54, fontSize: 12),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const Text(
-                "Akıllı Staj Yönetim Sistemi",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // Login Card
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Card(
-                  elevation: 20,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      children: [
-                        // Tab Bar
-                        TabBar(
-                          controller: _tabController,
-                          labelColor: primaryColor,
-                          unselectedLabelColor: Colors.grey,
-                          indicatorColor: primaryColor,
-                          indicatorWeight: 3,
-                          tabs: const [
-                            Tab(text: "Öğrenci"),
-                            Tab(text: "Akademisyen"),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Identifier Input
-                        TextField(
-                          controller: _identifierController,
-                          decoration: InputDecoration(
-                            labelText: inputLabel,
-                            prefixIcon: Icon(inputIcon),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: primaryColor,
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Şifre Input
-                        TextField(
-                          controller: _passwordController,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: "Şifre",
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: primaryColor,
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Beni Hatırla & Şifremi Unuttum
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: _rememberMe,
-                              activeColor: primaryColor,
-                              onChanged: (v) =>
-                                  setState(() => _rememberMe = v ?? false),
-                            ),
-                            const Text(
-                              "Beni Hatırla",
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const Spacer(),
-                            TextButton(
-                              onPressed: () {},
-                              child: Text(
-                                "Şifremi Unuttum",
-                                style: TextStyle(
-                                  color: primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Giriş Yap Butonu
-                        SizedBox(
-                          width: double.infinity,
-                          height: 55,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _login,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 6,
-                            ),
-                            child: _isLoading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
-                                : const Text(
-                                    "Giriş Yap",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
+        ),
+ 
+        // SAĞ PANEL — Login formu
+        Expanded(
+          flex: 4,
+          child: Container(
+            color: const Color(0xFFF8F9FA),
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(48),
+                child: SizedBox(
+                  width: 400,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Hoş Geldiniz',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Devam etmek için giriş yapın',
+                        style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+                      ),
+                      const SizedBox(height: 32),
+                      _buildLoginForm(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+ 
+  // ========== MOBİL LAYOUT ==========
+  Widget _buildMobileLayout() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
+        ),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 80),
+            Image.asset(
+              'assets/images/app_logo.png',
+              width: 120,
+              height: 120,
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.school, color: Colors.white, size: 64),
+            ),
+            const Text(
+              "InternFlow",
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 0.03,
+                shadows: [
+                  Shadow(color: Colors.black26, offset: Offset(2, 2), blurRadius: 4),
+                ],
+              ),
+            ),
+            const Text(
+              "Akıllı Staj Yönetim Sistemi",
+              style: TextStyle(fontSize: 16, color: Colors.white70, fontWeight: FontWeight.w300),
+            ),
+            const SizedBox(height: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Card(
+                elevation: 20,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: _buildLoginForm(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+          ],
         ),
       ),
     );
   }
+ 
+  // ========== ORTAK LOGIN FORMU ==========
+  Widget _buildLoginForm() {
+    final String inputLabel =
+        _tabController.index == 0 ? "Okul Numarası" : "Kullanıcı Adı";
+    final IconData inputIcon =
+        _tabController.index == 0 ? Icons.numbers : Icons.person_outline;
+ 
+    return Column(
+      children: [
+        // Tab Bar
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF5F5F5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            labelColor: Colors.white,
+            unselectedLabelColor: const Color(0xFF757575),
+            indicatorSize: TabBarIndicatorSize.tab,
+            indicator: BoxDecoration(
+              color: primaryColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            dividerColor: Colors.transparent,
+            tabs: const [
+              Tab(text: "Öğrenci"),
+              Tab(text: "Akademisyen"),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+ 
+        // Kimlik alanı
+        TextField(
+          controller: _identifierController,
+          decoration: InputDecoration(
+            labelText: inputLabel,
+            prefixIcon: Icon(inputIcon, color: const Color(0xFF757575)),
+            filled: true,
+            fillColor: const Color(0xFFF8F9FA),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: primaryColor, width: 2),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+ 
+        // Şifre alanı
+        TextField(
+          controller: _passwordController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            labelText: "Şifre",
+            prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF757575)),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: const Color(0xFF757575),
+              ),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            ),
+            filled: true,
+            fillColor: const Color(0xFFF8F9FA),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: primaryColor, width: 2),
+            ),
+          ),
+        ),
+ 
+        // Beni Hatırla & Şifremi Unuttum
+        Row(
+          children: [
+            Checkbox(
+              value: _rememberMe,
+              activeColor: primaryColor,
+              onChanged: (v) => setState(() => _rememberMe = v ?? false),
+            ),
+            const Text("Beni Hatırla", style: TextStyle(color: Colors.grey, fontSize: 13)),
+            const Spacer(),
+            TextButton(
+              onPressed: () {},
+              child: Text(
+                "Şifremi Unuttum",
+                style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+ 
+        // Giriş Yap Butonu
+        SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: ElevatedButton(
+            onPressed: _isLoading ? null : _login,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 4,
+            ),
+            child: _isLoading
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text(
+                    "Giriş Yap",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 16),
+ 
+        // Alt bilgi
+        const Text(
+          'InternFlow v1.0.0',
+          style: TextStyle(color: Color(0xFFBDBDBD), fontSize: 11),
+        ),
+      ],
+    );
+  }
+ 
+  // ========== ÖZELLİK LİSTESİ (WEB SOL PANEL) ==========
+  Widget _buildFeatureItem(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: Colors.white70, size: 18),
+          ),
+          const SizedBox(width: 14),
+          Text(text, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+        ],
+      ),
+    );
+  }
 }
+ 
