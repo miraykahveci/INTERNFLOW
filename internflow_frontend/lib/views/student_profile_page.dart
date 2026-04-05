@@ -114,7 +114,13 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-                  decoration: BoxDecoration(color: primaryColor),
+                  decoration: BoxDecoration(
+                   color: primaryColor,
+                   borderRadius: const BorderRadius.only(
+                   bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                    ),
+                  ),
                   child: Row(
                     children: [
                       const Icon(Icons.person, color: Colors.white, size: 28),

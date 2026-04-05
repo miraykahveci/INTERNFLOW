@@ -221,7 +221,13 @@ class _StudentProcessPageState extends State<StudentProcessPage> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(16, 60, 16, 20),
-                  decoration: BoxDecoration(color: primaryColor),
+                  decoration: BoxDecoration(
+                   color: primaryColor,
+                   borderRadius: const BorderRadius.only(
+                   bottomLeft: Radius.circular(32),
+                   bottomRight: Radius.circular(32),
+                   ),
+                 ),
                   child: Row(
                     children: [
                       const Icon(Icons.timeline, color: Colors.white, size: 28),
