@@ -102,6 +102,10 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
       _showError('Kurum adı boş bırakılamaz.');
       return;
     }
+    if (_startDate!.isBefore(DateTime.now().subtract(const Duration(days: 1)))) {
+       _showError('Geçmişe dönük staj tarihi seçilemez.');
+        return;
+}
     if (_startDate == null || _endDate == null) {
       _showError('Başlangıç ve bitiş tarihlerini seçiniz.');
       return;
