@@ -248,7 +248,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
         ? Center(child: CircularProgressIndicator(color: primaryColor))
         : Column(
             children: [
-              // GRADIENT HEADER
+            
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(24, 56, 24, 28),
@@ -265,7 +265,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                 ),
                 child: Column(
                   children: [
-                    // Üst satır
+                    
                     Row(
                       children: [
                         Expanded(
@@ -324,7 +324,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // HIZLI İSTATİSTİK SATIRLARI
+                    
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
@@ -359,24 +359,24 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                 ),
               ),
 
-              // İÇERİK
+              
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // BAŞVURU KARTI
+                      
                       _buildApplicationCard(),
                       const SizedBox(height: 28),
 
-                      // YOL HARİTASI
+                      
                       _buildSectionHeader('Staj Yol Haritası', Icons.route),
                       const SizedBox(height: 14),
                       _buildRoadmapCard(),
                       const SizedBox(height: 28),
 
-                      // BELGE ŞABLONLARI
+                      
                       _buildSectionHeader('Belge Şablonları', Icons.file_copy),
                       const SizedBox(height: 10),
                       SizedBox(
@@ -412,10 +412,12 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                       ),
                       const SizedBox(height: 28),
 
-                      // DUYURULAR
+                      
                       _buildSectionHeader('Duyurular', Icons.campaign),
                       const SizedBox(height: 10),
                       _buildAnnouncementCard(),
+                      const SizedBox(height: 12),
+                      _buildSgkAnnouncementCard(),
                     ],
                   ),
                 ),
@@ -602,7 +604,6 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
       );
     }
 
-    // DURUM KARTI
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -755,7 +756,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
 
     return Row(
       children: [
-        // İkon dairesi
+        
         Container(
           width: 40,
           height: 40,
@@ -784,7 +785,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
           ),
         ),
         const SizedBox(width: 14),
-        // Metin
+        
         Expanded(
           child: Text(
             text,
@@ -799,7 +800,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
             ),
           ),
         ),
-        // Sağ taraf badge
+        
         if (current)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -940,5 +941,55 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
         ],
       ),
     );
+
+
+    
   }
+  Widget _buildSgkAnnouncementCard() {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: const Color(0xFFC8E6C9)),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.green.withValues(alpha: 0.04),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(Icons.new_releases, color: Color(0xFF2E7D32), size: 20),
+        ),
+        const SizedBox(width: 14),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('SGK Bilgilendirmesi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF2E7D32))),
+              SizedBox(height: 4),
+              Text(
+                'Staj başlamadan önce SGK girişinizin yapılmış olması gerekmektedir. Detaylar için Dosyalar sekmesini inceleyiniz.',
+                style: TextStyle(color: Color(0xFF81C784), fontSize: 12, height: 1.4),
+              ),
+            ],
+          ),
+        ),
+        const Icon(Icons.arrow_forward_ios, size: 12, color: Color(0xFFA5D6A7)),
+      ],
+    ),
+  );
+}
 }

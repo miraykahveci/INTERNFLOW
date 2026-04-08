@@ -66,7 +66,7 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
 
     final students = uniqueStudents.values.toList();
 
-    // Sayaçları hesapla
+    
     int pending = 0, approved = 0, active = 0, completed = 0, rejected = 0;
     for (var s in students) {
       switch (s['status']) {
@@ -199,11 +199,11 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 1. DEĞİŞİKLİK: O pembemsi rengi silip yerine tertemiz açık bir gri ekledik.
+      
       backgroundColor: const Color(0xFFF4F6F8), 
       body: Column(
         children: [
-          // HEADER (Daha ferah ve modern)
+          
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
@@ -241,7 +241,7 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
             ),
           ),
 
-          // ARAMA ÇUBUĞU (Kırmızı alanla bütünleşik ve modern)
+          
           Transform.translate(
             offset: const Offset(0, -20),
             child: Padding(
@@ -286,7 +286,7 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
             ),
           ),
 
-          // FİLTRE CHİP'LERİ
+          
           Transform.translate(
             offset: const Offset(0, -8),
             child: SingleChildScrollView(
@@ -305,7 +305,7 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
             ),
           ),
 
-          // ÖĞRENCİ LİSTESİ
+          
           Expanded(
             child: _isLoading
                 ? Center(child: CircularProgressIndicator(color: primaryColor))
@@ -359,8 +359,8 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
     );
   }
 
-  // 2. DEĞİŞİKLİK: Card yerine Container kullanarak rengi zorla BEYAZ yaptık.
-  // ========== ÖĞRENCİ KARTI (Temiz Beyaz Tasarım) ==========
+  
+  // ========== ÖĞRENCİ KARTI ==========
   Widget _buildStudentCard(Map<String, dynamic> internship) {
     final student = internship['users'] as Map<String, dynamic>?;
     final studentName = student?['full_name'] ?? 'Bilinmeyen';
@@ -376,7 +376,7 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white, // Kırmızımsı arka planı ezen kod burası!
+        color: Colors.white, 
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFF1F2F6), width: 1.5),
         boxShadow: [
@@ -403,7 +403,7 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                // ÜST KISIM: Profil ve Statü
+                
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -471,7 +471,7 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // ORTA KISIM: Şirket ve Tarih
+                
                 Row(
                   children: [
                     Expanded(
@@ -512,7 +512,7 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // İLERLEME ÇUBUĞU
+                
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -547,7 +547,7 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // ALT KISIM: Aksiyon Butonları
+                
                 Row(
                   children: [
                     _buildActionButton(

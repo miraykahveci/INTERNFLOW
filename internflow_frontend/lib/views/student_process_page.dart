@@ -20,9 +20,9 @@ class _StudentProcessPageState extends State<StudentProcessPage> {
   String _academicianName = 'Atanıyor...';
   String _applicationDate = '';
   int _progressPercentage = 0;
-  String? _internId; // Staj kaydının ID'si (documents tablosu için lazım)
+  String? _internId; 
 
-  // Belge yükleme durumları
+  
   bool _isUploading = false;
   bool _islakImzaUploaded = false;
   bool _sgkBelgesiUploaded = false;
@@ -44,7 +44,7 @@ class _StudentProcessPageState extends State<StudentProcessPage> {
     try {
       final userId = Supabase.instance.client.auth.currentUser!.id;
 
-      // Öğrencinin son başvurusunu ve akademisyen bilgilerini çek
+      
       final response = await Supabase.instance.client
           .from('internship')
           .select(
@@ -60,7 +60,7 @@ class _StudentProcessPageState extends State<StudentProcessPage> {
         final createdAt = DateTime.parse(response['created_at']);
         final internId = response['intern_id'] as String;
 
-        // İlerleme yüzdesini duruma göre belirle
+        
         int progress = 0;
         if (status == 'pending') progress = 20;
         if (status == 'approved') progress = 40;
@@ -80,7 +80,7 @@ class _StudentProcessPageState extends State<StudentProcessPage> {
           }
         });
 
-        // Yüklenmiş belgeleri kontrol et
+        
         await _checkUploadedDocuments(internId);
       }
     } catch (e) {

@@ -55,12 +55,12 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     setState(() => _isLoading = true);
 
     try {
-      // 1. MAİL FORMATINA ÇEVİRME
+      
       final String loginEmail = identifier.contains('@')
           ? identifier
           : '$identifier@internflow.edu.tr';
 
-      // 2. SUPABASE AUTH İLE GİRİŞ
+      
       final AuthResponse authResponse = await Supabase.instance.client.auth.signInWithPassword(
         email: loginEmail,
         password: password,
@@ -68,7 +68,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
       if (authResponse.user == null) throw Exception("Kullanıcı doğrulanamadı.");
 
-      // 3. ROLÜ KONTROL ETME
+      
       final userResponse = await Supabase.instance.client
           .from('users')
           .select('role')
@@ -83,7 +83,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       final String role = userResponse['role'];
       final bool isStudentTab = _tabController.index == 0;
 
-      // 4. ÇAPRAZ SEKME GÜVENLİK KONTROLÜ
+      
       if (isStudentTab && role != 'student') {
         await Supabase.instance.client.auth.signOut();
         throw Exception("Bu giriş alanı sadece öğrencilere özeldir! ❌");
@@ -92,7 +92,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         throw Exception("Bu giriş alanı sadece akademisyenlere özeldir! ❌");
       }
 
-      // 5. BAŞARILI GİRİŞ VE YÖNLENDİRME
+      
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -159,7 +159,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   Widget _buildWebLayout() {
     return Row(
       children: [
-        // SOL PANEL — Branding
+        
         Expanded(
           flex: 5,
           child: Container(
@@ -176,7 +176,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Logo
+                    
                     Container(
                       width: 100,
                       height: 100,
@@ -211,13 +211,13 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                     const SizedBox(height: 48),
-                    // Özellik listesi
+                    
                     _buildFeatureItem(Icons.assignment, 'Staj başvuru ve onay yönetimi'),
                     _buildFeatureItem(Icons.cloud_upload, 'Dijital belge yükleme ve takip'),
                     _buildFeatureItem(Icons.auto_awesome, 'AI destekli staj defteri analizi'),
                     _buildFeatureItem(Icons.timeline, 'Gerçek zamanlı süreç takibi'),
                     const SizedBox(height: 48),
-                    // Alt bilgi
+                    
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
@@ -236,7 +236,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           ),
         ),
  
-        // SAĞ PANEL — Login formu
+        
         Expanded(
           flex: 4,
           child: Container(
@@ -342,7 +342,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
  
     return Column(
       children: [
-        // Tab Bar
+        
         Container(
           decoration: BoxDecoration(
             color: const Color(0xFFF5F5F5),
@@ -366,7 +366,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ),
         const SizedBox(height: 24),
  
-        // Kimlik alanı
+        
         TextField(
           controller: _identifierController,
           decoration: InputDecoration(
@@ -390,7 +390,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ),
         const SizedBox(height: 16),
  
-        // Şifre alanı
+        
         TextField(
           controller: _passwordController,
           obscureText: _obscurePassword,
@@ -421,7 +421,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           ),
         ),
  
-        // Beni Hatırla & Şifremi Unuttum
+        
         Row(
           children: [
             Checkbox(
@@ -442,7 +442,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ),
         const SizedBox(height: 12),
  
-        // Giriş Yap Butonu
+        
         SizedBox(
           width: double.infinity,
           height: 55,
@@ -463,7 +463,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ),
         const SizedBox(height: 16),
  
-        // Alt bilgi
+        
         const Text(
           'InternFlow v1.0.0',
           style: TextStyle(color: Color(0xFFBDBDBD), fontSize: 11),

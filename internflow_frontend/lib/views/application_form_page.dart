@@ -11,7 +11,7 @@ class ApplicationFormPage extends StatefulWidget {
 class _ApplicationFormPageState extends State<ApplicationFormPage> {
   final Color primaryColor = const Color(0xFF6A0F0F);
 
-  // Form Controllers
+  
   final _companyNameController = TextEditingController();
   final _companySectorController = TextEditingController();
   final _companyAddressController = TextEditingController();
@@ -36,7 +36,7 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
     super.dispose();
   }
 
-  // İş günü hesaplama (hafta sonları hariç)
+  
   int _calculateBusinessDays(DateTime start, DateTime end) {
     int days = 0;
     DateTime current = start;
@@ -115,7 +115,7 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
       return;
     }
     if (_calculatedDays < 20) {
-      _showError('Staj süresi en az 20 iş günü olmalıdır.');
+      _showError('Staj süresi en az 28 iş günü olmalıdır.');
       return;
     }
     if (_supervisorNameController.text.trim().isEmpty) {
@@ -213,7 +213,7 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
             ),
           ),
 
-          // FORM İÇERİĞİ
+          
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -258,7 +258,7 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Tarih Seçiciler
+                      
                       Row(
                         children: [
                           Expanded(
@@ -280,7 +280,7 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Hesaplanan Süre
+                      
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
@@ -401,7 +401,7 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
         ],
       ),
 
-      // ALT BUTON
+      
       bottomSheet: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),

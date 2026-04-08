@@ -365,13 +365,13 @@ class _AcademicianStudentDetailPageState
                   ),
                   const SizedBox(height: 20),
 
-                  // AI ANALİZ + GÜN SAYACI
+                  
                   Row(
                     children: [
                       Expanded(
                         child: GestureDetector(
                           onTap: () {
-                            // Analiz paneli
+                            
                           },
                           child: Container(
                             height: 125,
@@ -404,7 +404,7 @@ class _AcademicianStudentDetailPageState
                         ),
                       ),
                       const SizedBox(width: 16),
-                      // Gün Sayacı Kartı
+                      
                       Expanded(
                         child: Container(
                           height: 125,

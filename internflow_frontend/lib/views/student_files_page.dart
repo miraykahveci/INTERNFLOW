@@ -29,7 +29,7 @@ class StudentFilesPage extends StatelessWidget {
       backgroundColor: const Color(0xFFF8F9FA),
       body: Column(
         children: [
-          // HEADER
+          
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
@@ -62,7 +62,7 @@ class StudentFilesPage extends StatelessWidget {
             ),
           ),
  
-          // İÇERİK
+        
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
@@ -104,7 +104,7 @@ class StudentFilesPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
  
-                  // BAŞLANGIÇ BELGELERİ
+                  
                   _buildSectionTitle('Başlangıç Belgeleri'),
                   const SizedBox(height: 12),
  
@@ -134,7 +134,7 @@ class StudentFilesPage extends StatelessWidget {
  
                   const SizedBox(height: 24),
  
-                  // DÖNEM İÇİ BELGELER
+                  
                   _buildSectionTitle('Dönem İçi & Final Belgeleri'),
                   const SizedBox(height: 12),
  
@@ -188,7 +188,7 @@ class StudentFilesPage extends StatelessWidget {
  
                   const SizedBox(height: 24),
  
-                  // SGK BİLGİLENDİRME
+                  
                   _buildSectionTitle('SGK & Sigorta Bilgilendirmesi'),
                   const SizedBox(height: 12),
  
@@ -252,7 +252,7 @@ class StudentFilesPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
  
-                  // İLETİŞİM
+                  
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),

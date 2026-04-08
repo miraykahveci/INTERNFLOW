@@ -28,7 +28,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     try {
       final userId = Supabase.instance.client.auth.currentUser!.id;
 
-      // Kullanıcı bilgilerini çek
+      
       final userResponse = await Supabase.instance.client
           .from('users')
           .select('full_name, department')

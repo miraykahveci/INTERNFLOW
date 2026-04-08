@@ -167,13 +167,13 @@ class _AcademicianProfilePageState extends State<AcademicianProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // İsim
+                
                 Text(
                   '$_title $_fullName',
                   style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 0.5),
                 ),
                 const SizedBox(height: 12),
-                // Unvan badge
+                
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
@@ -204,7 +204,7 @@ class _AcademicianProfilePageState extends State<AcademicianProfilePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   
-                  // ONAY BEKLEYEN KART
+                  
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(24),
@@ -275,7 +275,7 @@ class _AcademicianProfilePageState extends State<AcademicianProfilePage> {
                   ),
                   const SizedBox(height: 32),
  
-                  // HESAP & BİLGİLER
+                  
                   _buildSectionTitle('Hesap & Bilgiler'),
                   const SizedBox(height: 16),
                   Container(
@@ -311,7 +311,7 @@ class _AcademicianProfilePageState extends State<AcademicianProfilePage> {
                   ),
                   const SizedBox(height: 32),
  
-                  // TERCİHLER
+                  
                   _buildSectionTitle('Tercihler'),
                   const SizedBox(height: 16),
                   Container(
@@ -337,7 +337,7 @@ class _AcademicianProfilePageState extends State<AcademicianProfilePage> {
                   ),
                   const SizedBox(height: 40),
  
-                  // ÇIKIŞ BUTONU
+                  
                   SizedBox(
                     width: double.infinity,
                     height: 56,
@@ -357,7 +357,7 @@ class _AcademicianProfilePageState extends State<AcademicianProfilePage> {
                   ),
                   const SizedBox(height: 24),
  
-                  // VERSİYON
+                  
                   const Center(
                     child: Text('InternFlow v1.0.0', style: TextStyle(color: Color(0xFF95A5A6), fontSize: 12, fontWeight: FontWeight.w500)),
                   ),
