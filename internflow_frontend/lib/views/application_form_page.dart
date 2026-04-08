@@ -18,8 +18,8 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
   final _companyEmailController = TextEditingController();
   final _supervisorNameController = TextEditingController();
 
-  // Form State
-  String _internshipType = 'summer'; // 'summer' veya 'term'
+  
+  String _internshipType = 'summer';
   DateTime? _startDate;
   DateTime? _endDate;
   bool _hasSgk = false;
@@ -78,7 +78,7 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
       setState(() {
         if (isStart) {
           _startDate = picked;
-          // Bitiş tarihi başlangıçtan önceyse sıfırla
+          
           if (_endDate != null && _endDate!.isBefore(picked)) {
             _endDate = null;
             _calculatedDays = 0;
@@ -97,7 +97,7 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
   }
 
   Future<void> _submitApplication() async {
-    // Validasyon
+    
     if (_companyNameController.text.trim().isEmpty) {
       _showError('Kurum adı boş bırakılamaz.');
       return;
@@ -124,14 +124,14 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
     try {
       final userId = Supabase.instance.client.auth.currentUser!.id;
 
-      // Öğrencinin danışmanını bul
+      
       final userResponse = await Supabase.instance.client
           .from('users')
           .select('department')
           .eq('user_id', userId)
           .single();
 
-      // Aynı bölümdeki akademisyeni bul (danışman)
+      
       final academicianResponse = await Supabase.instance.client
           .from('users')
           .select('user_id')
@@ -140,7 +140,7 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
           .limit(1)
           .maybeSingle();
 
-      // Supabase'e başvuru kaydet
+      
       await Supabase.instance.client.from('internship').insert({
         'student_id': userId,
         'academician_id': academicianResponse?['user_id'],
@@ -165,7 +165,7 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
         ),
       );
 
-      Navigator.pop(context, true); // true = başvuru gönderildi
+      Navigator.pop(context, true); 
     } catch (e) {
       _showError('Başvuru gönderilemedi: ${e.toString()}');
     } finally {

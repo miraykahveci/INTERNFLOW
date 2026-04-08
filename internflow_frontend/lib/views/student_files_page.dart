@@ -69,7 +69,7 @@ class StudentFilesPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // BİLGİLENDİRME KARTI
+                  
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -351,7 +351,7 @@ class StudentFilesPage extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              // Dosya bilgisi
+              
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -380,7 +380,7 @@ class StudentFilesPage extends StatelessWidget {
                 child: Text(fileSize, style: const TextStyle(fontSize: 10, color: Color(0xFF757575))),
               ),
               const Spacer(),
-              // İndir butonu
+              
               GestureDetector(
                 onTap: () => _downloadTemplate(fileName, context),
                 child: Container(

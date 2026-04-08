@@ -125,7 +125,6 @@ class _StudentProcessPageState extends State<StudentProcessPage> {
 
   Future<void> _pickAndUploadFile(String docType) async {
     try {
-      // 1. Dosya seçiciyi aç (sadece PDF)
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
@@ -136,7 +135,7 @@ class _StudentProcessPageState extends State<StudentProcessPage> {
 
       final file = result.files.first;
 
-      // Boyut kontrolü (10MB)
+    
       if (file.size > 10 * 1024 * 1024) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -156,7 +155,7 @@ class _StudentProcessPageState extends State<StudentProcessPage> {
           '${docType}_${DateTime.now().millisecondsSinceEpoch}.pdf';
       final storagePath = '$userId/$fileName';
 
-      // 2. Supabase Storage'a yükle
+      
       final fileBytes = File(file.path!).readAsBytesSync();
 
       await Supabase.instance.client.storage
@@ -164,14 +163,14 @@ class _StudentProcessPageState extends State<StudentProcessPage> {
           .uploadBinary(storagePath, fileBytes,
               fileOptions: const FileOptions(contentType: 'application/pdf'));
 
-      // 3. Documents tablosuna kaydet
+     
       await Supabase.instance.client.from('documents').insert({
         'intern_id': _internId,
         'file_url': storagePath,
         'doc_type': docType,
       });
 
-      // 4. UI güncelle
+     
       setState(() {
         if (docType == 'basvuru_formu') {
           _islakImzaUploaded = true;
@@ -249,7 +248,7 @@ class _StudentProcessPageState extends State<StudentProcessPage> {
                   ),
                 ),
 
-                // SCROLL EDİLEBİLİR İÇERİK
+                
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(20),
@@ -258,7 +257,7 @@ class _StudentProcessPageState extends State<StudentProcessPage> {
                         _buildProgressCard(),
                         const SizedBox(height: 32),
 
-                        // TIMELINE
+                        
                         _buildTimelineStep(
                           stepNumber: 1,
                           isFirst: true,

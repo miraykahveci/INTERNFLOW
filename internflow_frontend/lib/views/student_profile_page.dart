@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'login_page.dart'; // Çıkış yapınca buraya döneceğiz (Dosya yolun farklıysa düzelt lütfen)
+import 'login_page.dart'; 
 
 class StudentProfilePage extends StatefulWidget {
   const StudentProfilePage({super.key});
@@ -35,7 +35,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
           .eq('user_id', userId)
           .single();
 
-      // Staj durumunu çek (Rozet için)
+      
       final internshipResponse = await Supabase.instance.client
           .from('internship')
           .select('status')
@@ -56,7 +56,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     }
   }
 
-  // Staj durumuna göre profil rozeti metnini belirle
+  
   String _getStatusBadgeText() {
     switch (_internshipStatus) {
       case 'none':
@@ -74,33 +74,39 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     }
   }
 
-  // Çıkış Yapma İşlemi
   Future<void> _signOut() async {
-    // Küçük bir yükleme animasyonu gösterilebilir
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    try {
-      await Supabase.instance.client.auth.signOut();
-      if (!mounted) return;
-      
-      // Tüm sayfaları kapat ve Login'e dön
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-        (route) => false,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.pop(context); // Dialogu kapat
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Çıkış yapılamadı: $e'), backgroundColor: Colors.red),
-      );
-    }
-  }
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Text('Çıkış Yap', style: TextStyle(fontWeight: FontWeight.bold)),
+      content: const Text('Hesabınızdan çıkış yapmak istediğinize emin misiniz?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('İptal', style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            final navigator = Navigator.of(context);
+            navigator.pop();
+            await Supabase.instance.client.auth.signOut();
+            navigator.pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+              (route) => false,
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFD32F2F),
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          child: const Text('Çıkış Yap', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
+      ],
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -136,13 +142,13 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                       const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.settings, color: Colors.white70),
-                        onPressed: () {}, // Gelecekte ayarlar eklenebilir
+                        onPressed: () {}, 
                       )
                     ],
                   ),
                 ),
 
-                // SCROLL İÇERİK
+               
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(20),
@@ -150,7 +156,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         
-                        // ÜST KARANLIK PROFİL KARTI
+
                         Card(
                           elevation: 8,
                           color: const Color(0xFF37474F),
@@ -161,7 +167,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                             padding: const EdgeInsets.all(24),
                             child: Row(
                               children: [
-                                // Fotoğraf Alanı
+                                
                                 Stack(
                                   children: [
                                     CircleAvatar(
@@ -196,7 +202,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                 ),
                                 const SizedBox(width: 20),
                                 
-                                // İsim, Bölüm ve GANO
+                                
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,7 +226,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                       const SizedBox(height: 8),
                                       Row(
                                         children: [
-                                          // Durum Rozeti
+                                          
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                             decoration: BoxDecoration(
@@ -237,7 +243,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                             ),
                                           ),
                                           const SizedBox(width: 8),
-                                          // GANO Kutusu
+                                          
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                             decoration: BoxDecoration(
@@ -264,7 +270,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // İSTATİSTİKLER SATIRI
+                        
                         Row(
                           children: [
                             _buildStatCard(value: '1/2', label: 'Staj', valueColor: const Color(0xFFB71C1C), labelColor: const Color(0xFFE57373), bgColor: const Color(0xFFFFEBEE)),
@@ -276,7 +282,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // KARİYER ROZETLERİ
+                        
                         const Text(
                           'Kariyer Rozetleri',
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF424242)),
@@ -292,7 +298,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // MENÜ LİSTESİ
+                        
                         Card(
                           elevation: 2,
                           color: Colors.white,
@@ -322,7 +328,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // ÇIKIŞ YAP BUTONU
+                        
                         SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -362,7 +368,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     );
   }
 
-  // YARDIMCI WIDGET'LAR
+  
 
   Widget _buildStatCard({required String value, required String label, required Color valueColor, required Color labelColor, required Color bgColor}) {
     return Expanded(
