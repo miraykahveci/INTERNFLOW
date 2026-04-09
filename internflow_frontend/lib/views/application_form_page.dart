@@ -102,14 +102,17 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
       _showError('Kurum adı boş bırakılamaz.');
       return;
     }
-    if (_startDate!.isBefore(DateTime.now().subtract(const Duration(days: 1)))) {
-       _showError('Geçmişe dönük staj tarihi seçilemez.');
-        return;
-}
+
     if (_startDate == null || _endDate == null) {
       _showError('Başlangıç ve bitiş tarihlerini seçiniz.');
       return;
     }
+
+    if (_startDate!.isBefore(DateTime.now().subtract(const Duration(days: 1)))) {
+       _showError('Geçmişe dönük staj tarihi seçilemez.');
+        return;
+}
+    
     if (_endDate!.isBefore(_startDate!)) {
       _showError('Bitiş tarihi başlangıçtan önce olamaz.');
       return;
@@ -118,6 +121,11 @@ class _ApplicationFormPageState extends State<ApplicationFormPage> {
       _showError('Staj süresi en az 28 iş günü olmalıdır.');
       return;
     }
+    if (_companyEmailController.text.trim().isNotEmpty &&
+       !_companyEmailController.text.trim().contains('@')) {
+      _showError('Geçerli bir kurum e-posta adresi giriniz.');
+      return;
+}
     if (_supervisorNameController.text.trim().isEmpty) {
       _showError('Yetkili mühendis adı boş bırakılamaz.');
       return;
