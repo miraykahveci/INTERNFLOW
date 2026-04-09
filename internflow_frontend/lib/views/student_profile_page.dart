@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login_page.dart'; 
+import 'package:url_launcher/url_launcher.dart';
 
 class StudentProfilePage extends StatefulWidget {
   const StudentProfilePage({super.key});
@@ -322,7 +323,14 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                               const Divider(height: 1, color: Color(0xFFF5F5F5), indent: 16, endIndent: 16),
                               _buildMenuItem(icon: Icons.lock_outline, title: 'Gizlilik ve KVKK'),
                               const Divider(height: 1, color: Color(0xFFF5F5F5), indent: 16, endIndent: 16),
-                              _buildMenuItem(icon: Icons.account_balance, title: 'E-Devlet Kapısı'),
+                              _buildMenuItem(
+                                 icon: Icons.account_balance,
+                                 title: 'E-Devlet Kapısı',
+                                 onTap: () async {
+                                    final uri = Uri.parse('https://giris.turkiye.gov.tr/Giris/');
+                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                 },
+                                ),
                             ],
                           ),
                         ),
@@ -407,12 +415,12 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     );
   }
 
-  Widget _buildMenuItem({required IconData icon, required String title}) {
-    return ListTile(
-      leading: Icon(icon, color: const Color(0xFF455A64)),
-      title: Text(title, style: const TextStyle(color: Color(0xFF424242), fontSize: 14)),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFFBDBDBD)),
-      onTap: () {},
-    );
-  }
+  Widget _buildMenuItem({required IconData icon, required String title, VoidCallback? onTap}) {
+  return ListTile(
+    leading: Icon(icon, color: const Color(0xFF455A64)),
+    title: Text(title, style: const TextStyle(color: Color(0xFF424242), fontSize: 14)),
+    trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFFBDBDBD)),
+    onTap: onTap ?? () {},
+  );
+}
 }
