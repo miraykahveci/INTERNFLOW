@@ -321,7 +321,69 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                               ),
                               _buildMenuItem(icon: Icons.notifications_active, title: 'Bildirim Ayarları'),
                               const Divider(height: 1, color: Color(0xFFF5F5F5), indent: 16, endIndent: 16),
-                              _buildMenuItem(icon: Icons.lock_outline, title: 'Gizlilik ve KVKK'),
+                              _buildMenuItem(
+                                 icon: Icons.lock_outline,
+                                 title: 'Gizlilik ve KVKK',
+                                 onTap: () {
+                                   showModalBottomSheet(
+                                      context: context,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                                     ),
+                                     builder: (context) => Padding(
+                                        padding: const EdgeInsets.all(24),
+                                        child: Column(
+                                           mainAxisSize: MainAxisSize.min,
+                                           crossAxisAlignment: CrossAxisAlignment.start,
+                                           children: [
+                                             Center(
+                                                child: Container(
+                                                  width: 40, height: 4,
+                                                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              Row(
+                                                 children: [
+                                                    Icon(Icons.shield, color: primaryColor, size: 24),
+                                                    const SizedBox(width: 12),
+                                                    const Text('Gizlilik ve KVKK', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                                  ],
+                                                 ),
+                                               const SizedBox(height: 16),
+                                               const Text(
+                                                     'InternFlow, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında kişisel verilerinizi koruma altına almaktadır.',
+                                                      style: TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF616161)),
+                                                 ),
+                                                const SizedBox(height: 12),
+                                                const Text(
+                                                  '• Kişisel verileriniz yalnızca staj süreç yönetimi amacıyla işlenmektedir.\n'
+                                                  '• Verileriniz üçüncü taraflarla paylaşılmamaktadır.\n'
+                                                  '• Staj defterlerindeki kişisel bilgiler AI analizinden önce maskelenmektedir.\n'
+                                                  '• Tüm veri iletişimi HTTPS protokolü üzerinden şifreli olarak gerçekleşmektedir.\n'
+                                                  '• Verilerinizin silinmesini talep etme hakkınız saklıdır.',
+                                                  style: TextStyle(fontSize: 12, height: 1.7, color: Color(0xFF757575)),
+                                                 ),
+                                                const SizedBox(height: 20),
+                                                SizedBox(
+                                                   width: double.infinity,
+                                                   child: ElevatedButton(
+                                                      onPressed: () => Navigator.pop(context),
+                                                      style: ElevatedButton.styleFrom(
+                                                         backgroundColor: primaryColor,
+                                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                         padding: const EdgeInsets.symmetric(vertical: 14),
+                                                       ),
+                                                       child: const Text('Anladım', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                                       ),
+                                                     ),
+                                                     const SizedBox(height: 8),
+                                                    ],
+                                                    ),
+                                                 ),
+                                                );
+                                               },
+                                             ),
                               const Divider(height: 1, color: Color(0xFFF5F5F5), indent: 16, endIndent: 16),
                               _buildMenuItem(
                                  icon: Icons.account_balance,
