@@ -497,9 +497,13 @@ Widget _buildHomeContent() {
                             children: [
                               Icon(Icons.search, color: primaryColor),
                               const SizedBox(width: 12),
-                              const Expanded(
+                               Expanded(
                                 child: TextField(
-                                  decoration: InputDecoration(
+                                 onChanged: (value) {
+      
+                                  },
+                                  
+                                  decoration: const InputDecoration(
                                     hintText:
                                         'Öğrenci Adı, No veya Bölüm Ara...',
                                     hintStyle: TextStyle(
