@@ -330,8 +330,19 @@ class _AcademicianProfilePageState extends State<AcademicianProfilePage> {
                           subtitle: 'Yeni staj başvurularında uyar',
                           value: _notificationsEnabled,
                           onChanged: (val) => setState(() => _notificationsEnabled = val),
-                          showDivider: false,
-                        ),
+                          showDivider: true,
+                          
+                       ),
+                       _buildSwitchTile(
+                         icon: Icons.dark_mode_outlined,
+                         title: 'Karanlık Mod',
+                         subtitle: 'Koyu tema görünümünü etkinleştir',
+                         value: false,
+                         onChanged: (val) {},
+                         showDivider: false,
+                         ),
+
+                      
                       ],
                     ),
                   ),
