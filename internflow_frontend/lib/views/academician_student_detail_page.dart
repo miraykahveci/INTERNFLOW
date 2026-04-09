@@ -371,8 +371,21 @@ class _AcademicianStudentDetailPageState
                       Expanded(
                         child: GestureDetector(
                           onTap: () {
-                            
-                          },
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               const SnackBar(
+                                 content: Row(
+                                   children: [
+                                     Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+                                     SizedBox(width: 10),
+                                     Expanded(child: Text('AI Analiz modülü final döneminde aktifleşecektir.')),
+                                    ],
+                                   ),
+                                  backgroundColor: Color(0xFF5A0B0B),
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: Duration(seconds: 3),
+                                ),
+                               );
+                            },
                           child: Container(
                             height: 125,
                             decoration: BoxDecoration(
