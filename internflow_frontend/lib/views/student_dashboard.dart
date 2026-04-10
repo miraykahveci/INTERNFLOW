@@ -406,6 +406,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                               subtitle: 'Bilgi',
                               color: const Color(0xFF2E7D32),
                               bgColor: const Color(0xFFE8F5E9),
+                              onTap: () => _onItemTapped(2),
                             ),
                           ],
                         ),
