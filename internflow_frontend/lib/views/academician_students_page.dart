@@ -551,18 +551,32 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPage> {
                 Row(
                   children: [
                     _buildActionButton(
-                      icon: Icons.phone_outlined,
-                      label: 'Ara',
-                      color: const Color(0xFF7F8C8D),
-                      onTap: () {},
-                    ),
-                    const SizedBox(width: 20),
-                    _buildActionButton(
-                      icon: Icons.email_outlined,
-                      label: 'E-posta',
-                      color: const Color(0xFF7F8C8D),
-                      onTap: () {},
-                    ),
+                     icon: Icons.phone_outlined,
+                     label: 'Ara',
+                     color: const Color(0xFF7F8C8D),
+                     onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                           const SnackBar(
+                              content: Text('Telefon bilgisi final döneminde eklenecektir.'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                           );
+                        },
+                      ),
+                 const SizedBox(width: 20),
+                  _buildActionButton(
+                     icon: Icons.email_outlined,
+                     label: 'E-posta',
+                     color: const Color(0xFF7F8C8D),
+                     onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                           content: Text('E-posta bilgisi final döneminde eklenecektir.'),
+                           behavior: SnackBarBehavior.floating,
+                         ),
+                      );
+                     },
+                   ),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
