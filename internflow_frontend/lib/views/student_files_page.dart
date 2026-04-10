@@ -270,11 +270,34 @@ class StudentFilesPage extends StatelessWidget {
                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: primaryColor),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          'Staj komisyonuna staj@rumeli.edu.tr adresinden ulaşabilirsiniz.',
+                        GestureDetector(
+                           onTap: () async {
+                           final uri = Uri.parse('mailto:staj@rumeli.edu.tr');
+                           await launchUrl(uri);
+                          },
+                        child: RichText(
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Color(0xFF757575), fontSize: 12),
+                          text: const TextSpan(
+                            style: TextStyle(color: Color(0xFF757575), fontSize: 12),
+                             children: [
+                             TextSpan(text: 'Staj komisyonuna '),
+                             TextSpan(
+                              text: 'staj@rumeli.edu.tr',
+                              style: TextStyle(color: Color(0xFF1565C0), fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                             ),
+                             TextSpan(text: ' adresinden ulaşabilirsiniz.'),
+                             ],
+                            ),
+                           ),
                         ),
+                          const SizedBox(height: 24),
+                          Center(
+                            child: Text(
+                              'Belgeler son güncelleme: Nisan 2026',
+                              style: TextStyle(color: Color(0xFFBDBDBD), fontSize: 11),
+                            ),
+                        ),
+
                       ],
                     ),
                   ),
