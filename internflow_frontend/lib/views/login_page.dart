@@ -432,7 +432,15 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             const Text("Beni Hatırla", style: TextStyle(color: Colors.grey, fontSize: 13)),
             const Spacer(),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                  content: Text('Şifre sıfırlama için staj komisyonuyla iletişime geçiniz.'),
+                  backgroundColor: Color(0xFF546E7A),
+                  behavior: SnackBarBehavior.floating,
+                 ),
+                );
+                },
               child: Text(
                 "Şifremi Unuttum",
                 style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 13),
