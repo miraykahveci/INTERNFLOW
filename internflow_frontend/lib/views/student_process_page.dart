@@ -466,6 +466,13 @@ class _StudentProcessPageState extends State<StudentProcessPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  if (_applicationDate.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                     'Başvuru: $_applicationDate',
+                      style: const TextStyle(color: Color(0xFF90A4AE), fontSize: 11),
+                   ),
+                 ],
                 ],
               ),
             ),
