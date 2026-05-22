@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../core/api_config.dart';
 
 class StudentFilesWeb extends StatefulWidget {
   const StudentFilesWeb({super.key});
@@ -20,6 +23,96 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
   static const Color textSecondary = Color(0xFF64748B);
 
   int _hoveredFile = -1;
+
+  // ========== YÖNERGE STATE ==========
+  bool _yonergeLoading = true;
+  String? _yonergeLastModified;
+  String? _yonergeSize;
+  String? _yonergePdfUrl;
+  String? _yonergeError;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchYonergeInfo();
+  }
+
+  // ========== YÖNERGE BACKEND'DEN ÇEK ==========
+  Future<void> _fetchYonergeInfo() async {
+    setState(() => _yonergeLoading = true);
+    try {
+      final response = await http
+          .get(Uri.parse(ApiConfig.yonergeInfo))
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode != 200) {
+        throw Exception('Backend hatası: ${response.statusCode}');
+      }
+
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (json['success'] != true) {
+        throw Exception(json['error'] ?? 'Bilinmeyen hata');
+      }
+
+      final data = json['data'] as Map<String, dynamic>;
+
+      setState(() {
+        _yonergeLastModified = _formatLastModified(data['last_modified']);
+        _yonergeSize = _formatSize(data['file_size_kb']);
+        _yonergePdfUrl = data['pdf_url'] as String?;
+        _yonergeLoading = false;
+        _yonergeError = null;
+      });
+    } catch (e) {
+      debugPrint('Yönerge fetch hatası: $e');
+      setState(() {
+        _yonergeLoading = false;
+        _yonergeError = 'Yönerge bilgisi alınamadı';
+      });
+    }
+  }
+
+  String _formatLastModified(dynamic isoString) {
+    if (isoString == null) return 'Bilinmiyor';
+    try {
+      final date = DateTime.parse(isoString.toString());
+      const months = [
+        'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+        'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+      ];
+      return '${date.day} ${months[date.month - 1]} ${date.year}';
+    } catch (_) {
+      return 'Bilinmiyor';
+    }
+  }
+
+  String _formatSize(dynamic sizeKb) {
+    if (sizeKb == null) return '-';
+    final kb = (sizeKb is num) ? sizeKb.toDouble() : 0.0;
+    if (kb >= 1024) {
+      return '${(kb / 1024).toStringAsFixed(1)} MB';
+    }
+    return '${kb.toStringAsFixed(0)} KB';
+  }
+
+  Future<void> _downloadYonerge() async {
+    try {
+      // Backend'in download endpoint'ini kullan (cache freshness + self-healing tetiklenir)
+      final uri = Uri.parse(ApiConfig.yonergeDownload);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Yönerge açılamadı: $e'),
+            backgroundColor: const Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
 
   Future<void> _downloadTemplate(String fileName) async {
     try {
@@ -59,40 +152,38 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
                       _buildInfoBanner(),
                       const SizedBox(height: 32),
 
-                      _buildSectionTitle('Başlangıç Belgeleri', 'Staj öncesinde indirilmesi gereken belgeler'),
+                      // ========== ÖNCELİKLİ: YÖNERGE KARTI (BACKEND BAĞLI) ==========
+                      _buildSectionTitle(
+                        'Resmi Staj Yönergesi',
+                        'Okulun resmi sitesinden otomatik senkronize edilir',
+                      ),
                       const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildFileCard(
-                              0,
-                              icon: Icons.description_outlined,
-                              accentColor: const Color(0xFF2563EB),
-                              title: 'Staj Kabul Formu',
-                              description: 'Staj yapacağınız kurumun doldurması gereken resmi kabul belgesi.',
-                              fileName: 'kabul_formu.pdf',
-                              fileType: 'PDF',
-                              size: 'Şablon',
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                          Expanded(
-                            child: _buildFileCard(
-                              1,
-                              icon: Icons.gavel_outlined,
-                              accentColor: purpleGlow,
-                              title: 'Staj Koşulları ve Kurallar',
-                              description: 'Staj süresince uymanız gereken kurallar ve değerlendirme kriterleri.',
-                              fileName: 'staj_kosul.pdf',
-                              fileType: 'PDF',
-                              size: 'Bilgilendirme',
-                            ),
-                          ),
-                        ],
+                      _buildYonergeCard(),
+                      const SizedBox(height: 36),
+
+                      // ========== BAŞLANGIÇ BELGELERİ ==========
+                      _buildSectionTitle(
+                        'Başlangıç Belgeleri',
+                        'Staj öncesinde indirilmesi gereken belgeler',
+                      ),
+                      const SizedBox(height: 20),
+                      _buildFileCard(
+                        0,
+                        icon: Icons.description_outlined,
+                        accentColor: const Color(0xFF2563EB),
+                        title: 'Staj Kabul Formu',
+                        description:
+                            'Staj yapacağınız kurumun doldurması gereken resmi kabul belgesi.',
+                        fileName: 'kabul_formu.pdf',
+                        fileType: 'PDF',
+                        size: 'Şablon',
                       ),
                       const SizedBox(height: 32),
 
-                      _buildSectionTitle('Dönem İçi & Final Belgeleri', 'Staj süresince ve bitiminde kullanılacak belgeler'),
+                      _buildSectionTitle(
+                        'Dönem İçi & Final Belgeleri',
+                        'Staj süresince ve bitiminde kullanılacak belgeler',
+                      ),
                       const SizedBox(height: 20),
                       Row(
                         children: [
@@ -102,7 +193,8 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
                               icon: Icons.book_outlined,
                               accentColor: primaryColor,
                               title: 'Staj Günlüğü / Defteri',
-                              description: 'Staj süresince günlük olarak doldurmanız gereken çalışma kayıtları.',
+                              description:
+                                  'Staj süresince günlük olarak doldurmanız gereken çalışma kayıtları.',
                               fileName: 'staj_gunlugu.pdf',
                               fileType: 'PDF',
                               size: 'Şablon',
@@ -115,7 +207,8 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
                               icon: Icons.insert_drive_file_outlined,
                               accentColor: const Color(0xFF16A34A),
                               title: 'Kapak Sayfası',
-                              description: 'Staj defterinizin ön kapağında kullanılacak resmi kapak şablonu.',
+                              description:
+                                  'Staj defterinizin ön kapağında kullanılacak resmi kapak şablonu.',
                               fileName: 'kapak.pdf',
                               fileType: 'PDF',
                               size: 'Şablon',
@@ -132,7 +225,8 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
                               icon: Icons.assignment_outlined,
                               accentColor: const Color(0xFFC62828),
                               title: 'Staj Sicil Fişi',
-                              description: 'Staj bitiminde kurumdaki yetkilinin doldurarak imzalayacağı belge.',
+                              description:
+                                  'Staj bitiminde kurumdaki yetkilinin doldurarak imzalayacağı belge.',
                               fileName: 'staj_sicil.pdf',
                               fileType: 'PDF',
                               size: 'Şablon',
@@ -145,7 +239,8 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
                               icon: Icons.poll_outlined,
                               accentColor: const Color(0xFF00838F),
                               title: 'Değerlendirme Formu',
-                              description: 'Staj tamamlandıktan sonra deneyiminizi değerlendirmeniz için anket formu.',
+                              description:
+                                  'Staj tamamlandıktan sonra deneyiminizi değerlendirmeniz için anket formu.',
                               fileName: 'degerlendirme.pdf',
                               fileType: 'PDF',
                               size: 'Şablon',
@@ -155,11 +250,13 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
                       ),
                       const SizedBox(height: 36),
 
-                      _buildSectionTitle('SGK & Sigorta Bilgilendirmesi', 'Sosyal güvence ile ilgili önemli bilgiler'),
+                      _buildSectionTitle(
+                        'SGK & Sigorta Bilgilendirmesi',
+                        'Sosyal güvence ile ilgili önemli bilgiler',
+                      ),
                       const SizedBox(height: 20),
                       _buildSgkCard(),
                       const SizedBox(height: 20),
-
                       const Center(
                         child: Text(
                           'Belgeler son güncelleme: Nisan 2026',
@@ -276,7 +373,257 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
     );
   }
 
- 
+// ========== YÖNERGE CARD (BACKEND BAĞLI - PREMIUM) ==========
+  Widget _buildYonergeCard() {
+    final isHovered = _hoveredFile == 99;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hoveredFile = 99),
+      onExit: (_) => setState(() => _hoveredFile = -1),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        transform: Matrix4.translationValues(0, isHovered ? -6 : 0, 0),
+        padding: const EdgeInsets.all(28),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isHovered ? primaryColor.withValues(alpha: 0.3) : const Color(0xFFEEEEF2),
+            width: isHovered ? 1.5 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isHovered
+                  ? primaryColor.withValues(alpha: 0.18)
+                  : primaryColor.withValues(alpha: 0.05),
+              blurRadius: isHovered ? 28 : 18,
+              offset: Offset(0, isHovered ? 12 : 8),
+            ),
+            BoxShadow(
+              color: isHovered
+                  ? primaryColor.withValues(alpha: 0.08)
+                  : purpleGlow.withValues(alpha: 0.03),
+              blurRadius: isHovered ? 40 : 26,
+              offset: Offset(0, isHovered ? 18 : 12),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // İKON
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              width: 64, height: 64,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isHovered
+                      ? [primaryColor, primaryDark]
+                      : [
+                          primaryColor.withValues(alpha: 0.15),
+                          primaryColor.withValues(alpha: 0.05),
+                        ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: isHovered
+                    ? [
+                        BoxShadow(
+                          color: primaryColor.withValues(alpha: 0.4),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Icon(
+                Icons.gavel,
+                color: isHovered ? Colors.white : primaryColor,
+                size: 30,
+              ),
+            ),
+            const SizedBox(width: 20),
+
+            // İÇERİK
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'MDBF Staj Usul ve Esasları',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
+                      letterSpacing: -0.4,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'İstanbul Rumeli Üniversitesi Mühendislik ve Doğa Bilimleri Fakültesi resmi staj yönergesi. Okul sitesinden otomatik senkronize edilir.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: textSecondary,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // META BİLGİLER
+                  if (_yonergeLoading)
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 14, height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: primaryColor.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Yönerge bilgisi alınıyor...',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    )
+                  else if (_yonergeError != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDC2626).withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.error_outline, color: Color(0xFFDC2626), size: 14),
+                          const SizedBox(width: 6),
+                          Text(
+                            _yonergeError!,
+                            style: const TextStyle(
+                              color: Color(0xFFDC2626),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Row(
+                      children: [
+                        _buildMetaBadge(
+                          Icons.picture_as_pdf,
+                          'PDF',
+                          const Color(0xFFDC2626),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildMetaBadge(
+                          Icons.history,
+                          _yonergeLastModified ?? '-',
+                          primaryColor,
+                          label: 'Son güncelleme',
+                        ),
+                        const SizedBox(width: 8),
+                        _buildMetaBadge(
+                          Icons.straighten,
+                          _yonergeSize ?? '-',
+                          purpleGlow,
+                          label: 'Boyut',
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            // İNDİR BUTONU
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: _yonergeLoading ? null : _downloadYonerge,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [primaryColor, primaryDark]),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: isHovered
+                        ? [
+                            BoxShadow(
+                              color: primaryColor.withValues(alpha: 0.4),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.file_download_outlined, color: Colors.white, size: 18),
+                      SizedBox(width: 8),
+                      Text(
+                        'Yönergeyi İndir',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetaBadge(IconData icon, String value, Color color, {String? label}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 6),
+          if (label != null) ...[
+            Text(
+              '$label: ',
+              style: TextStyle(
+                color: color.withValues(alpha: 0.7),
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   // ========== INFO BANNER ==========
   Widget _buildInfoBanner() {
@@ -298,7 +645,10 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
             width: 44, height: 44,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [const Color(0xFF2563EB).withValues(alpha: 0.2), const Color(0xFF2563EB).withValues(alpha: 0.1)],
+                colors: [
+                  const Color(0xFF2563EB).withValues(alpha: 0.2),
+                  const Color(0xFF2563EB).withValues(alpha: 0.1),
+                ],
               ),
               borderRadius: BorderRadius.circular(11),
             ),
@@ -373,16 +723,12 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
           ),
           boxShadow: [
             BoxShadow(
-              color: isHovered
-                  ? primaryColor.withValues(alpha: 0.18)
-                  : accentColor.withValues(alpha: 0.05),
+              color: isHovered ? primaryColor.withValues(alpha: 0.18) : accentColor.withValues(alpha: 0.05),
               blurRadius: isHovered ? 28 : 18,
               offset: Offset(0, isHovered ? 12 : 8),
             ),
             BoxShadow(
-              color: isHovered
-                  ? primaryColor.withValues(alpha: 0.08)
-                  : purpleGlow.withValues(alpha: 0.03),
+              color: isHovered ? primaryColor.withValues(alpha: 0.08) : purpleGlow.withValues(alpha: 0.03),
               blurRadius: isHovered ? 40 : 26,
               offset: Offset(0, isHovered ? 18 : 12),
             ),
@@ -560,7 +906,6 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
             ],
           ),
           const SizedBox(height: 24),
-
           Row(
             children: [
               Expanded(child: _buildSgkInfoItem('Staj başlamadan önce SGK girişiniz okul tarafından yapılır.')),
@@ -576,9 +921,7 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
               Expanded(child: _buildSgkInfoItem('Staj bitiminde SGK çıkışı otomatik olarak yapılır.')),
             ],
           ),
-
           const SizedBox(height: 18),
-
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(14),
@@ -648,7 +991,7 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
     );
   }
 
-  // ========== HELP FOOTER (Bordo Banner) ==========
+  // ========== HELP FOOTER ==========
   Widget _buildHelpFooter() {
     return Container(
       width: double.infinity,
