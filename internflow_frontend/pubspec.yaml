@@ -15,7 +15,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   
   # Eski manuel API paketimiz (dursun zararı yok)
-  http: ^1.2.0
+  http: ^1.6.0
   
   # YENİ VE ASIL SİHİRLİ SATIRIMIZ: Supabase! 🚀
   supabase_flutter: ^2.12.0
