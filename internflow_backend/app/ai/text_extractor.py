@@ -17,25 +17,12 @@ import io
 
 
 class TextExtractor:
-    """Belgeden metin çıkaran ana sınıf"""
 
     PDF_TYPES = {"application/pdf"}
     IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg"}
 
     def extract(self, file_bytes: bytes, content_type: str) -> str:
-        """
-        Dosya tipine göre doğru extraction yöntemini seçer.
-
-        Args:
-            file_bytes: Dosyanın binary içeriği
-            content_type: MIME type (örn: 'application/pdf')
-
-        Returns:
-            Çıkarılan düz metin
-
-        Raises:
-            ValueError: Desteklenmeyen format veya boş metin
-        """
+      
         content_type = (content_type or "").lower().strip()
 
         if content_type in self.PDF_TYPES:
@@ -49,12 +36,7 @@ class TextExtractor:
             )
 
     def _extract_from_pdf(self, file_bytes: bytes) -> str:
-        """
-        PDF'den metin çıkarır (pdfplumber ile).
-
-        pdfplumber neden? Saf Python, sistem bağımlılığı yok,
-        Türkçe karakterleri (ç,ğ,ı,ö,ş,ü) doğru işler, deploy dostu.
-        """
+       
         import pdfplumber
 
         text_parts = []
@@ -110,7 +92,7 @@ class TextExtractor:
 
 
 # ==========================================================================
-# Singleton — tek instance 
+# Singleton 
 # ==========================================================================
 _extractor_instance: TextExtractor | None = None
 

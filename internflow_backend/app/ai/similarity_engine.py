@@ -20,7 +20,7 @@ MEDIUM_RISK_THRESHOLD = 0.60
 
 
 class SimilarityEngine:
-    """Vektör benzerliği ve risk hesaplama motoru"""
+    
 
     def find_similar_analyses(
         self,
@@ -28,17 +28,7 @@ class SimilarityEngine:
         exclude_analysis_id: str,
         match_count: int = 5,
     ) -> list[dict]:
-        """
-        Verilen vektöre en benzer analizleri bulur (pgvector RPC ile).
-
-        Args:
-            query_embedding: Karşılaştırılacak 768 boyutlu vektör
-            exclude_analysis_id: Hariç tutulacak analiz (kendisi)
-            match_count: Kaç benzer sonuç döneceği
-
-        Returns:
-            [{analysis_id, document_id, similarity}, ...] (similarity'ye göre sıralı)
-        """
+       
         try:
             response = supabase.rpc(
                 "match_analysis",
@@ -60,29 +50,14 @@ class SimilarityEngine:
         query_embedding: list[float],
         exclude_analysis_id: str,
     ) -> dict | None:
-        """
-        En benzer TEK analizi döner (en yüksek similarity).
-
-        Returns:
-            {analysis_id, document_id, similarity} veya None (hiç eşleşme yoksa)
-        """
+        
         matches = self.find_similar_analyses(
             query_embedding, exclude_analysis_id, match_count=1
         )
         return matches[0] if matches else None
 
     def calculate_risk_level(self, similarity_score: float) -> str:
-        """
-        Benzerlik skorundan risk seviyesi belirler (Python if/else).
-
-        threshold kararı.
-
-        Args:
-            similarity_score: 0.0 - 1.0 arası cosine similarity
-
-        Returns:
-            'high', 'medium' veya 'low'
-        """
+        
         if similarity_score >= HIGH_RISK_THRESHOLD:
             return "high"
         elif similarity_score >= MEDIUM_RISK_THRESHOLD:
