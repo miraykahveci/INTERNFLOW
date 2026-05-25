@@ -22,14 +22,10 @@ import re
 
 
 class PIIMasker:
-    """Metindeki kişisel verileri maskeleyen sınıf"""
+    
 
     def __init__(self, name_list: list[str] | None = None):
-        """
-        Args:
-            name_list: Maskelenecek isimler listesi (opsiyonel).
-                       Demo defterlerindeki isimler buraya eklenir.
-        """
+       
         self.name_list = name_list or []
 
         
@@ -55,35 +51,44 @@ class PIIMasker:
         self.url_pattern = re.compile(
             r"(?:https?://|www\.)[^\s]+"
         )
+        self.ticket_pattern = re.compile(
+            r"\b(?:MEET|JIRA|TASK|TICKET|REF|PR)-\d{3,6}\b"
+        )
+
+    
+        self.ip_pattern = re.compile(
+            r"\b(?:\d{1,3}\.){3}\d{1,3}\b"
+        )
 
     def mask(self, text: str) -> str:
-        """
-        Metindeki tüm PII'ları maskeler.
-
-        Sıra önemli: Önce spesifik desenler (email, ID), sonra genel olanlar.
-        Böylece bir email'in içindeki sayı yanlışlıkla telefon sanılmaz.
-        """
+       
         masked = text
 
-        # 1. Email (en spesifik, ilk önce)
+        
         masked = self.email_pattern.sub("[MASKED_EMAIL]", masked)
 
-        # 2. URL
+        
         masked = self.url_pattern.sub("[MASKED_URL]", masked)
+        
+        
+        masked = self.ticket_pattern.sub("[MASKED_TICKET]", masked)
 
-        # 3. Çalışan/Stajyer ID 
+       
+        masked = self.ip_pattern.sub("[MASKED_IP]", masked)
+
+        
         masked = self.employee_id_pattern.sub("[MASKED_EMPLOYEE_ID]", masked)
 
-        # 4. Genel ID 
+       
         masked = self.generic_id_pattern.sub("[MASKED_ID]", masked)
 
-        # 5. TC 
+       
         masked = self.tckn_pattern.sub("[MASKED_TCKN]", masked)
 
-        # 6. Telefon
+       
         masked = self.phone_pattern.sub("[MASKED_PHONE]", masked)
 
-        # 7. İsimler
+      
         for name in self.name_list:
             if name.strip():
                 name_pattern = re.compile(
@@ -103,6 +108,8 @@ class PIIMasker:
             "generic_id": masked.count("[MASKED_ID]"),
             "url": masked.count("[MASKED_URL]"),
             "name": masked.count("[MASKED_NAME]"),
+            "ticket": masked.count("[MASKED_TICKET]"),
+            "ip": masked.count("[MASKED_IP]"),
         }
 
 
