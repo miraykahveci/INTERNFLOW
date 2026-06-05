@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 /// - Production: Render URL'i
 class ApiConfig {
   static String get baseUrl {
-    // Production'da burayı güncelleyeceksin
+    // Production'da burası güncellenecek
     // return 'https://internflow-backend.onrender.com';
     
     // Web (Chrome)
@@ -35,4 +35,14 @@ class ApiConfig {
   
   static String get yonergeInfo => '$apiV1/yonerge/info';
   static String get yonergeDownload => '$apiV1/yonerge/download';
+
+ // ========== AI Analiz Endpoint'leri ==========
+  static String aiAnalyze(String documentId) => '$apiV1/ai/analyze/$documentId';
+
+  
+  static String aiStatus(String analysisId) => '$apiV1/ai/analysis/$analysisId/status';
+
+  static String aiResult(String documentId) => '$apiV1/ai/analysis/document/$documentId';
+
+  static String get aiAnalyses => '$apiV1/ai/analyses';
 }

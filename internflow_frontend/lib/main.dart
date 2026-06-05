@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
 }
 
 // ========== AUTH GATE ==========
-// Session kontrolü yapan ve doğru sayfaya yönlendiren widget
+
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
@@ -61,7 +61,7 @@ class _AuthGateState extends State<AuthGate> {
 
   Future<void> _checkAuthStatus() async {
     try {
-      // Supabase otomatik olarak localStorage'dan session'ı yükler
+      
       final session = Supabase.instance.client.auth.currentSession;
 
       if (session == null) {
@@ -73,7 +73,6 @@ class _AuthGateState extends State<AuthGate> {
         return;
       }
 
-      // Session var, kullanıcının role'ünü çek
       final userId = session.user.id;
       final userResponse = await Supabase.instance.client
           .from('users')
@@ -86,7 +85,7 @@ class _AuthGateState extends State<AuthGate> {
         _isLoading = false;
       });
     } catch (e) {
-      // Hata durumunda login'e at
+      
       debugPrint('Auth kontrol hatası: $e');
       setState(() {
         _userRole = null;
@@ -97,7 +96,7 @@ class _AuthGateState extends State<AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-    // Yüklenirken loading göster
+    
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: Color(0xFFF8F7FB),
@@ -121,7 +120,7 @@ class _AuthGateState extends State<AuthGate> {
       );
     }
 
-    // Role'e göre yönlendir
+    
     if (_userRole == 'student') {
       return const StudentDashboardPage();
     } else if (_userRole == 'academician') {

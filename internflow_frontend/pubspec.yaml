@@ -13,15 +13,17 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
-  
-  # Eski manuel API paketimiz (dursun zararı yok)
+
   http: ^1.6.0
-  
-  # YENİ VE ASIL SİHİRLİ SATIRIMIZ: Supabase! 🚀
+
   supabase_flutter: ^2.12.0
   flutter_dotenv: ^6.0.0
   file_picker: ^10.3.10
   url_launcher: ^6.3.2
+
+  
+  pdf: ^3.11.1
+  printing: ^5.13.4
 
 dev_dependencies:
   flutter_test:
