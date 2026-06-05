@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io';
 import 'student_process_page_mobile.dart';
+import 'application_form_page.dart'; 
 
 class StudentProcessWeb extends StatefulWidget {
   const StudentProcessWeb({super.key});
@@ -12,7 +12,7 @@ class StudentProcessWeb extends StatefulWidget {
 }
 
 class _StudentProcessWebState extends State<StudentProcessWeb> {
-  // Premium color palette
+  
   static const Color primaryColor = Color(0xFF6A0F0F);
   static const Color primaryDark = Color(0xFF4A0808);
   static const Color purpleGlow = Color(0xFF8B5CF6);
@@ -28,6 +28,8 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
   String _applicationDate = '';
   int _progressPercentage = 0;
   String? _internId;
+  String? _internshipResult; 
+  DateTime? _completedAt;
 
   bool _isUploading = false;
   bool _islakImzaUploaded = false;
@@ -51,7 +53,7 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
       final response = await Supabase.instance.client
           .from('internship')
           .select(
-              'intern_id, status, created_at, academician_id, users!internship_academician_id_fkey(full_name, title)')
+              'intern_id, status, result, completed_at, created_at, academician_id, users!internship_academician_id_fkey(full_name, title)')
           .eq('student_id', userId)
           .order('created_at', ascending: false)
           .limit(1)
@@ -73,6 +75,10 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
           _internshipStatus = status;
           _progressPercentage = progress;
           _internId = internId;
+          _internshipResult = response['result'] as String?;
+          _completedAt = response['completed_at'] != null
+              ? DateTime.tryParse(response['completed_at'].toString())
+              : null;
           _applicationDate =
               '${createdAt.day.toString().padLeft(2, '0')}.${createdAt.month.toString().padLeft(2, '0')}.${createdAt.year}';
           if (academician != null) {
@@ -119,82 +125,92 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
   }
 
   Future<void> _pickAndUploadFile(String docType) async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf'],
-        allowMultiple: false,
-      );
+  try {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+      allowMultiple: false,
+      withData: true,  
+    );
 
-      if (result == null || result.files.isEmpty) return;
+    if (result == null || result.files.isEmpty) return;
 
-      final file = result.files.first;
+    final file = result.files.first;
 
-      if (file.size > 10 * 1024 * 1024) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Dosya boyutu 10MB\'dan büyük olamaz!'),
-              backgroundColor: Color(0xFFDC2626),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-        return;
-      }
-
-      setState(() => _isUploading = true);
-
-      final userId = Supabase.instance.client.auth.currentUser!.id;
-      final fileName = '${docType}_${DateTime.now().millisecondsSinceEpoch}.pdf';
-      final storagePath = '$userId/$fileName';
-
-      final fileBytes = File(file.path!).readAsBytesSync();
-
-      await Supabase.instance.client.storage
-          .from('documents')
-          .uploadBinary(storagePath, fileBytes,
-              fileOptions: const FileOptions(contentType: 'application/pdf'));
-
-      await Supabase.instance.client.from('documents').insert({
-        'intern_id': _internId,
-        'file_url': storagePath,
-        'doc_type': docType,
-      });
-
-      setState(() {
-        if (docType == 'basvuru_formu') {
-          _islakImzaUploaded = true;
-          _islakImzaFileName = file.name;
-        } else if (docType == 'sgk_belgesi') {
-          _sgkBelgesiUploaded = true;
-          _sgkBelgesiFileName = file.name;
-        }
-      });
-
+    if (file.size > 10 * 1024 * 1024) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${file.name} başarıyla yüklendi! ✅'),
-            backgroundColor: const Color(0xFF16A34A),
+          const SnackBar(
+            content: Text('Dosya boyutu 10MB\'dan büyük olamaz!'),
+            backgroundColor: Color(0xFFDC2626),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Yükleme başarısız: ${e.toString()}'),
-            backgroundColor: const Color(0xFFDC2626),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isUploading = false);
+      return;
     }
+
+    setState(() => _isUploading = true);
+
+    final userId = Supabase.instance.client.auth.currentUser!.id;
+    final fileName = '${docType}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    final storagePath = '$userId/$fileName';
+
+
+    final fileBytes = file.bytes;
+    if (fileBytes == null) {
+      throw Exception('Dosya okunamadı (bytes null)');
+    }
+
+    await Supabase.instance.client.storage
+        .from('documents')
+        .uploadBinary(storagePath, fileBytes,
+            fileOptions: const FileOptions(contentType: 'application/pdf'));
+
+    await Supabase.instance.client.from('documents').insert({
+      'intern_id': _internId,
+      'file_url': storagePath,
+      'doc_type': docType,
+    });
+
+    setState(() {
+      if (docType == 'basvuru_formu') {
+        _islakImzaUploaded = true;
+        _islakImzaFileName = file.name;
+      } else if (docType == 'sgk_belgesi') {
+        _sgkBelgesiUploaded = true;
+        _sgkBelgesiFileName = file.name;
+      }
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${file.name} başarıyla yüklendi! ✅'),
+          backgroundColor: const Color(0xFF16A34A),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Yükleme başarısız: ${e.toString()}'),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  } finally {
+    if (mounted) setState(() => _isUploading = false);
   }
+}
+
+
+
+
+
 
   StepStatus _getStepStatus(int stepIndex) {
     if (_internshipStatus == 'none' || _internshipStatus == 'rejected') {
@@ -225,7 +241,8 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
       return StepStatus.locked;
     }
     if (stepIndex == 6) {
-      if (_internshipStatus == 'completed') return StepStatus.current;
+      // KEY FIX: staj tamamlandıysa ADIM 6 da completed olmalı (current değil)
+      if (_internshipStatus == 'completed') return StepStatus.completed;
       return StepStatus.locked;
     }
     return StepStatus.locked;
@@ -236,6 +253,7 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
     if (_internshipStatus == 'approved') return 'Belge Teslim Süreci';
     if (_internshipStatus == 'active') return 'Staj Dönemi';
     if (_internshipStatus == 'completed') return 'Süreç Tamamlandı';
+    if (_internshipStatus == 'rejected') return 'Başvuru Reddedildi';
     return 'Başvuru Bekleniyor';
   }
 
@@ -262,15 +280,10 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Progress overview cards
                       _buildOverviewCards(),
                       const SizedBox(height: 32),
-
-                      // Section title
                       _buildSectionTitle('Süreç Adımları', 'Staj başvurunuzun her aşamasını buradan takip edebilirsiniz'),
                       const SizedBox(height: 24),
-
-                      // Timeline cards (2 columns)
                       _buildTimelineGrid(),
                     ],
                   ),
@@ -369,11 +382,28 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
                             fontSize: 16,
                           ),
                         ),
+                        
+if (_internshipStatus == 'rejected') ...[
+  const SizedBox(height: 20),
+  ElevatedButton.icon(
+    onPressed: () async {
+      final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const ApplicationFormPage()));
+      if (result == true) _loadProcessData(); 
+    },
+    icon: const Icon(Icons.refresh, color: Colors.white, size: 18),
+    label: const Text('Yeni Başvuru Yap', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFFDC2626), 
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+      elevation: 4,
+    ),
+  ),
+],
                       ],
                     ),
                   ),
 
-                  // Refresh button
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -407,7 +437,13 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
 
   // ========== OVERVIEW CARDS ==========
   Widget _buildOverviewCards() {
-    final completedCount = [1, 2, 3, 4, 5, 6].where((i) => _getStepStatus(i) == StepStatus.completed || (i == 1 && _internshipStatus != 'none')).length;
+    final isInactive = _internshipStatus == 'none' || _internshipStatus == 'rejected';
+    final completedCount = isInactive
+        ? 0
+        : [1, 2, 3, 4, 5, 6].where((i) =>
+            _getStepStatus(i) == StepStatus.completed ||
+            (i == 1)  
+          ).length;
 
     return Row(
       children: [
@@ -514,7 +550,6 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
     );
   }
 
-  // ========== SECTION TITLE ==========
   Widget _buildSectionTitle(String title, String subtitle) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -534,9 +569,19 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
 
   // ========== TIMELINE GRID ==========
   Widget _buildTimelineGrid() {
+    // ADIM 6 subtitle artık dinamik: tamamlandıysa "başarıyla tamamlandı"
+    final step6Subtitle = _internshipStatus == 'completed'
+        ? 'Stajınız başarıyla tamamlandı'
+        : 'Staj bitiminde aktifleşir';
+
     final steps = [
-      _StepData(1, 'Başvuru Gönderildi', _applicationDate.isNotEmpty ? _applicationDate : 'Tarih bekleniyor', Icons.send,
-          _internshipStatus != 'none' ? StepStatus.completed : StepStatus.locked),
+      _StepData(
+  1, 
+  'Başvuru Gönderildi', 
+  _internshipStatus == 'rejected' ? 'Başvurunuz akademisyen tarafından reddedildi' : (_applicationDate.isNotEmpty ? _applicationDate : 'Tarih bekleniyor'), 
+  Icons.send,
+  (_internshipStatus != 'none' && _internshipStatus != 'rejected') ? StepStatus.completed : StepStatus.locked
+),
       _StepData(2, 'Akademisyen Değerlendirmesi',
           _getStepStatus(2) == StepStatus.current ? 'Şu anki aşama' : _getStepStatus(2) == StepStatus.completed ? 'Onaylandı' : 'Onay bekleniyor',
           Icons.person_search, _getStepStatus(2)),
@@ -549,7 +594,7 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
       _StepData(5, 'Staj Dönemi',
           _getStepStatus(5) == StepStatus.current ? 'Stajınız devam ediyor' : 'SGK girişi sonrası başlar',
           Icons.work_history, _getStepStatus(5)),
-      _StepData(6, 'Defter & Değerlendirme', 'Staj bitiminde aktifleşir',
+      _StepData(6, 'Defter & Değerlendirme', step6Subtitle,
           Icons.verified, _getStepStatus(6)),
     ];
 
@@ -601,6 +646,9 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
       } else if (_sgkBelgesiUploaded) {
         customContent = _buildUploadedFileInfo(_sgkBelgesiFileName!);
       }
+    } else if (step.stepNumber == 6 && _internshipStatus == 'completed') {
+      // YENİ: ADIM 6 tamamlandığında yumuşak yönlendirme banner'ı
+      customContent = _buildCompletionInfoBox();
     }
 
     return MouseRegion(
@@ -646,7 +694,6 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
           children: [
             Row(
               children: [
-                // Step number circle
                 Container(
                   width: 56, height: 56,
                   decoration: BoxDecoration(
@@ -985,6 +1032,148 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
       ),
     );
   }
+
+  // ========== COMPLETION INFO BOX  ==========
+  Widget _buildCompletionInfoBox() {
+    final isSuccess = _internshipResult == 'success';
+    final isFail = _internshipResult == 'fail';
+    // Result null ise nötr (sadece bilgilendirme)
+    final hasResult = isSuccess || isFail;
+    final color = isSuccess
+        ? const Color(0xFF16A34A)
+        : isFail
+            ? const Color(0xFFDC2626)
+            : purpleGlow;
+    final label = isSuccess ? 'BAŞARILI' : isFail ? 'BAŞARISIZ' : 'SONUÇLANDI';
+    final icon = isSuccess
+        ? Icons.emoji_events
+        : isFail
+            ? Icons.info_outline
+            : Icons.emoji_events;
+
+    String completedDateText = '-';
+    if (_completedAt != null) {
+      final d = _completedAt!;
+      completedDateText =
+          '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.06),
+            purpleGlow.withValues(alpha: 0.04),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 50, height: 50,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.75)]),
+                  borderRadius: BorderRadius.circular(13),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.35),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(icon, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (hasResult)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.8)]),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Stajınız Sonuçlandırıldı',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: textPrimary,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        const Icon(Icons.event_available, size: 12, color: textSecondary),
+                        const SizedBox(width: 5),
+                        Text(
+                          'Tamamlandı: $completedDateText',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFEEEEF2)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lightbulb_outline, size: 16, color: purpleGlow),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Akademisyen değerlendirme detayları için "Sonuçlarım" sekmesini ziyaret edebilirsiniz.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: textSecondary,
+                      height: 1.4,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ========== STEP DATA MODEL ==========
@@ -997,3 +1186,5 @@ class _StepData {
 
   _StepData(this.stepNumber, this.title, this.subtitle, this.icon, this.status);
 }
+
+

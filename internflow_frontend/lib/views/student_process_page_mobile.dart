@@ -22,7 +22,8 @@ class _StudentProcessPageMobileState extends State<StudentProcessPageMobile> {
   int _progressPercentage = 0;
   String? _internId; 
 
-  
+  String? _internshipResult; // 'success' | 'fail' | null
+  DateTime? _completedAt;
   bool _isUploading = false;
   bool _islakImzaUploaded = false;
   bool _sgkBelgesiUploaded = false;
@@ -48,7 +49,7 @@ class _StudentProcessPageMobileState extends State<StudentProcessPageMobile> {
       final response = await Supabase.instance.client
           .from('internship')
           .select(
-              'intern_id, status, created_at, academician_id, users!internship_academician_id_fkey(full_name, title)')
+    'intern_id, status, result, completed_at, created_at, academician_id, users!internship_academician_id_fkey(full_name, title)')
           .eq('student_id', userId)
           .order('created_at', ascending: false)
           .limit(1)
@@ -71,6 +72,10 @@ class _StudentProcessPageMobileState extends State<StudentProcessPageMobile> {
           _internshipStatus = status;
           _progressPercentage = progress;
           _internId = internId;
+          _internshipResult = response['result'] as String?;
+          _completedAt = response['completed_at'] != null
+               ? DateTime.tryParse(response['completed_at'].toString())
+               : null;
           _applicationDate =
               '${createdAt.day.toString().padLeft(2, '0')}.${createdAt.month.toString().padLeft(2, '0')}.${createdAt.year}';
           if (academician != null) {
@@ -262,11 +267,11 @@ class _StudentProcessPageMobileState extends State<StudentProcessPageMobile> {
                           stepNumber: 1,
                           isFirst: true,
                           title: 'Başvuru Gönderildi',
-                          subtitle: _applicationDate.isNotEmpty
-                              ? _applicationDate
-                              : 'Tarih Bekleniyor',
-                          status: _internshipStatus != 'none'
-                              ? StepStatus.completed
+                          subtitle: _internshipStatus == 'rejected' 
+                            ? 'Başvurunuz akademisyen tarafından reddedildi' 
+                            : (_applicationDate.isNotEmpty ? _applicationDate : 'Tarih Bekleniyor'),
+                          status: (_internshipStatus != 'none' && _internshipStatus != 'rejected') 
+                              ? StepStatus.completed 
                               : StepStatus.locked,
                           icon: Icons.send,
                         ),
@@ -340,12 +345,17 @@ class _StudentProcessPageMobileState extends State<StudentProcessPageMobile> {
                           icon: Icons.work_history,
                         ),
                         _buildTimelineStep(
-                          stepNumber: 6,
-                          isLast: true,
-                          title: 'Defter Teslimi & Değerlendirme',
-                          subtitle: 'Staj bitiminde aktifleşir.',
-                          status: _getStepStatus(6),
-                          icon: Icons.verified,
+                        stepNumber: 6,
+                        isLast: true,
+                        title: 'Defter Teslimi & Değerlendirme',
+                        subtitle: _internshipStatus == 'completed'
+                        ? 'Stajınız başarıyla tamamlandı'
+                        : 'Staj bitiminde aktifleşir.',
+                      status: _getStepStatus(6),
+                       icon: Icons.verified,
+                       customContent: _internshipStatus == 'completed'
+                      ? _buildCompletionInfoBox()
+                        : null,
                         ),
                         const SizedBox(height: 100),
                       ],
@@ -391,7 +401,7 @@ class _StudentProcessPageMobileState extends State<StudentProcessPageMobile> {
       return StepStatus.locked;
     }
     if (stepIndex == 6) {
-      if (_internshipStatus == 'completed') return StepStatus.current;
+       if (_internshipStatus == 'completed') return StepStatus.completed;
       return StepStatus.locked;
     }
     return StepStatus.locked;
@@ -843,4 +853,145 @@ class _StudentProcessPageMobileState extends State<StudentProcessPageMobile> {
       ),
     );
   }
+  // ========== COMPLETION INFO BOX  ==========
+Widget _buildCompletionInfoBox() {
+  final isSuccess = _internshipResult == 'success';
+  final isFail = _internshipResult == 'fail';
+  final hasResult = isSuccess || isFail;
+  final color = isSuccess
+      ? const Color(0xFF43A047)
+      : isFail
+          ? const Color(0xFFE53935)
+          : const Color(0xFF8B5CF6);
+  final label = isSuccess
+      ? 'BAŞARILI'
+      : isFail
+          ? 'BAŞARISIZ'
+          : 'SONUÇLANDI';
+  final icon = isSuccess
+      ? Icons.emoji_events
+      : isFail
+          ? Icons.info_outline
+          : Icons.emoji_events;
+
+  String completedDateText = '-';
+  if (_completedAt != null) {
+    final d = _completedAt!;
+    completedDateText =
+        '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
+  }
+
+  return Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color.withValues(alpha: 0.25)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color, color.withValues(alpha: 0.75)],
+                ),
+                borderRadius: BorderRadius.circular(11),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (hasResult)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [color, color.withValues(alpha: 0.8)],
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        label,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'Stajınız Sonuçlandırıldı',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF37474F),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Icons.event_available, size: 11, color: Color(0xFF757575)),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Tamamlandı: $completedDateText',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Color(0xFF757575),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFAFAFC),
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(color: const Color(0xFFEEEEF2)),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.lightbulb_outline, size: 14, color: Color(0xFF8B5CF6)),
+              SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Akademisyen değerlendirme detayları için "Sonuçlarım" sekmesini ziyaret edebilirsiniz.',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: Color(0xFF757575),
+                    height: 1.4,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }
