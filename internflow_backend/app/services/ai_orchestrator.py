@@ -1,18 +1,3 @@
-"""
-AI Orchestrator - Pipeline Koordinatörü
-
-Bu modül, tüm AI servislerini birbirine bağlayan pipeline'ı yönetir.
-document_id alır, baştan sona analizi yürütür, sonucu analysis_result'a yazar.
-
-Mimari not:
-- Bu bir "orchestrator" (orkestra şefi) deseni. Kendisi iş yapmaz,
-  uzman servisleri doğru sırayla çağırır ve koordine eder.
-- Her adımda progress güncellenir → frontend polling ile takip eder.
-- Hata yönetimi: herhangi bir adım patlarsa analiz 'failed' işaretlenir,
-  pipeline çökmez (graceful failure).
-- PDF in-memory işlenir (diske yazılmaz) - KVKK + performans.
-"""
-
 from datetime import datetime, timezone
 
 from app.db.supabase_client import supabase_admin as supabase, supabase_admin
@@ -25,9 +10,6 @@ from app.ai.llm_service import get_llm_service
 STORAGE_BUCKET = "documents"
 
 
-# ==========================================================================
-# YARDIMCI FONKSİYONLAR
-# ==========================================================================
 
 def _update_progress(analysis_id: str, progress: int, step: str) -> None:
     
@@ -102,7 +84,7 @@ async def run_analysis_pipeline(analysis_id: str, document_id: str) -> None:
             raise ValueError("PDF'ten yeterli metin çıkarılamadı")
 
         # ------------------------------------------------------------------
-        # ADIM 3: PII maskele (embedding'den ÖNCE - Privacy by Design)
+        # ADIM 3: PII maskele 
         # ------------------------------------------------------------------
         _update_progress(analysis_id, 45, "Kişisel veriler maskeleniyor")
 
@@ -131,9 +113,10 @@ async def run_analysis_pipeline(analysis_id: str, document_id: str) -> None:
         _update_progress(analysis_id, 75, "Benzerlik analizi yapılıyor")
 
         engine = get_similarity_engine()
+        
         top_match = engine.get_top_match(
             query_embedding=embedding,
-            exclude_analysis_id=analysis_id,  # kendini hariç tut
+            exclude_document_id=document_id,  
         )
 
         
