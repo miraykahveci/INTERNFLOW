@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'academician_students_page.dart';
 import 'academician_profile_page.dart';
 import 'login_page.dart';
+import 'academician_ai_analysis_page.dart';
 
 class AcademicianDashboardWeb extends StatefulWidget {
   const AcademicianDashboardWeb({super.key});
@@ -12,7 +13,6 @@ class AcademicianDashboardWeb extends StatefulWidget {
 }
 
 class _AcademicianDashboardWebState extends State<AcademicianDashboardWeb> {
-  // Premium color palette
   static const Color primaryColor = Color(0xFF6A0F0F);
   static const Color primaryDark = Color(0xFF4A0808);
   static const Color purpleGlow = Color(0xFF8B5CF6);
@@ -63,37 +63,51 @@ class _AcademicianDashboardWebState extends State<AcademicianDashboardWeb> {
           .order('created_at', ascending: false);
 
       final List<Map<String, dynamic>> allInternships =
-          List<Map<String, dynamic>>.from(internships);
+    List<Map<String, dynamic>>.from(internships);
 
-      int pending = 0;
-      int sgkPending = 0;
-      int active = 0;
-      List<Map<String, dynamic>> items = [];
 
-      for (var intern in allInternships) {
-        final status = intern['status'] as String;
+final Map<String, Map<String, dynamic>> uniqueStudents = {};
+for (var intern in allInternships) {
+  final studentId = intern['student_id'] as String;
+  if (!uniqueStudents.containsKey(studentId)) {
+    uniqueStudents[studentId] = intern;
+  }
+}
+final uniqueList = uniqueStudents.values.toList();
 
-        if (status == 'pending') {
-          pending++;
-          items.add({'type': 'pending', 'data': intern});
-        } else if (status == 'approved') {
-          sgkPending++;
-          items.add({'type': 'sgk', 'data': intern});
-        } else if (status == 'active') {
-          active++;
-        }
-      }
 
-      setState(() {
-        _fullName = userResponse['full_name'] ?? '';
-        _title = userResponse['title'] ?? 'Akademisyen';
-        _pendingCount = pending;
-        _sgkPendingCount = sgkPending;
-        _activeCount = active;
-        _totalStudents = allInternships.length;
-        _pendingItems = items;
-        _isLoading = false;
-      });
+int pending = 0;
+int sgkPending = 0;
+int active = 0;
+List<Map<String, dynamic>> items = [];
+
+for (var intern in uniqueList) {
+  final status = intern['status'] as String;
+
+  if (status == 'pending') {
+    pending++;
+    items.add({'type': 'pending', 'data': intern});
+  } else if (status == 'approved') {
+    sgkPending++;
+    items.add({'type': 'sgk', 'data': intern});
+  } else if (status == 'active') {
+    active++;
+  }
+}
+
+setState(() {
+  _fullName = userResponse['full_name'] ?? '';
+  _title = userResponse['title'] ?? 'Akademisyen';
+  _pendingCount = pending;
+  _sgkPendingCount = sgkPending;
+  _activeCount = active;
+  _totalStudents = uniqueList.length;
+  _pendingItems = items;
+  _isLoading = false;
+});
+
+
+
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
@@ -624,45 +638,10 @@ class _AcademicianDashboardWebState extends State<AcademicianDashboardWeb> {
     switch (_selectedIndex) {
       case 0: return _buildHomeContent();
       case 1: return const AcademicianStudentsPage();
-      case 2: return _buildAiPlaceholder();
+      case 2: return const AcademicianAiAnalysisPage();
       case 3: return const AcademicianProfilePage();
       default: return _buildHomeContent();
     }
-  }
-
-  Widget _buildAiPlaceholder() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80, height: 80,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [purpleGlow, purpleGlow.withValues(alpha: 0.7)]),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: purpleGlow.withValues(alpha: 0.4),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: const Icon(Icons.auto_awesome, size: 40, color: Colors.white),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'AI Analiz Laboratuvarı',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textPrimary, letterSpacing: -0.5),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Bu modül final döneminde aktifleşecektir.',
-            style: TextStyle(color: textSecondary, fontSize: 14),
-          ),
-        ],
-      ),
-    );
   }
 
   // ========== HOME CONTENT ==========
@@ -1058,7 +1037,6 @@ class _AcademicianDashboardWebState extends State<AcademicianDashboardWeb> {
                           style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: textPrimary, letterSpacing: -0.3),
                         ),
                         SizedBox(width: 10),
-                        _ComingSoonBadge(),
                       ],
                     ),
                     SizedBox(height: 4),
@@ -1373,22 +1351,3 @@ class _AcademicianDashboardWebState extends State<AcademicianDashboardWeb> {
   }
 }
 
-// ========== COMING SOON BADGE ==========
-class _ComingSoonBadge extends StatelessWidget {
-  const _ComingSoonBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(5),
-      ),
-      child: const Text(
-        'YAKINDA',
-        style: TextStyle(color: Color(0xFF7C3AED), fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.8),
-      ),
-    );
-  }
-}

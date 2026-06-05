@@ -10,7 +10,6 @@ class AcademicianStudentsWeb extends StatefulWidget {
 }
 
 class _AcademicianStudentsWebState extends State<AcademicianStudentsWeb> {
-  // Premium color palette
   static const Color primaryColor = Color(0xFF6A0F0F);
   static const Color primaryDark = Color(0xFF4A0808);
   static const Color purpleGlow = Color(0xFF8B5CF6);
@@ -671,7 +670,7 @@ class _AcademicianStudentsWebState extends State<AcademicianStudentsWeb> {
           ),
           child: Column(
             children: [
-              // Header row: avatar + info + status + arrow
+              
               Row(
                 children: [
                   // Avatar

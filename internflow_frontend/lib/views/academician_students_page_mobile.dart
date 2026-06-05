@@ -20,10 +20,8 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
-
   int _pendingCount = 0;
   int _activeCount = 0;
-  int _notebookCount = 0;
   int _completedCount = 0;
   int _approvedCount = 0;
   int _rejectedCount = 0;
@@ -41,93 +39,78 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
   }
 
   Future<void> _loadStudents() async {
-  setState(() => _isLoading = true);
-  try {
-    final userId = Supabase.instance.client.auth.currentUser!.id;
+    setState(() => _isLoading = true);
+    try {
+      final userId = Supabase.instance.client.auth.currentUser!.id;
 
-    final response = await Supabase.instance.client
-        .from('internship')
-        .select(
-            '*, users!internship_student_id_fkey(full_name, student_number, department)')
-        .eq('academician_id', userId)
-        .order('created_at', ascending: false);
+      final response = await Supabase.instance.client
+          .from('internship')
+          .select(
+              '*, users!internship_student_id_fkey(full_name, student_number, department)')
+          .eq('academician_id', userId)
+          .order('created_at', ascending: false);
 
-    final allInternships = List<Map<String, dynamic>>.from(response);
+      final allInternships = List<Map<String, dynamic>>.from(response);
 
-  
-    final Map<String, Map<String, dynamic>> uniqueStudents = {};
-    for (var intern in allInternships) {
-      final studentId = intern['student_id'] as String;
-      
-      if (!uniqueStudents.containsKey(studentId)) {
-        uniqueStudents[studentId] = intern;
+      final Map<String, Map<String, dynamic>> uniqueStudents = {};
+      for (var intern in allInternships) {
+        final studentId = intern['student_id'] as String;
+        if (!uniqueStudents.containsKey(studentId)) {
+          uniqueStudents[studentId] = intern;
+        }
       }
-    }
 
-    final students = uniqueStudents.values.toList();
+      final students = uniqueStudents.values.toList();
 
-    
-    int pending = 0, approved = 0, active = 0, completed = 0, rejected = 0;
-    for (var s in students) {
-      switch (s['status']) {
-        case 'pending':
-          pending++;
-          break;
-        case 'approved':
-          approved++;
-          break;
-        case 'active':
-          active++;
-          break;
-        case 'completed':
-          completed++;
-          break;
-        case 'rejected':
-          rejected++;
-          break;
+      int pending = 0, approved = 0, active = 0, completed = 0, rejected = 0;
+      for (var s in students) {
+        switch (s['status']) {
+          case 'pending':
+            pending++;
+            break;
+          case 'approved':
+            approved++;
+            break;
+          case 'active':
+            active++;
+            break;
+          case 'completed':
+            completed++;
+            break;
+          case 'rejected':
+            rejected++;
+            break;
+        }
       }
+
+      setState(() {
+        _allStudents = students;
+        _pendingCount = pending;
+        _approvedCount = approved;
+        _activeCount = active;
+        _completedCount = completed;
+        _rejectedCount = rejected;
+        _isLoading = false;
+      });
+
+      _applyFilters();
+    } catch (e) {
+      debugPrint('Öğrenci listesi yüklenemedi: $e');
+      setState(() => _isLoading = false);
     }
-
-    setState(() {
-      _allStudents = students;
-      _pendingCount = pending;
-      _approvedCount = approved;
-      _activeCount = active;
-      _completedCount = completed;
-      _rejectedCount = rejected;
-      _isLoading = false;
-    });
-
-    _applyFilters();
-  } catch (e) {
-    debugPrint('Öğrenci listesi yüklenemedi: $e');
-    setState(() => _isLoading = false);
   }
-}
 
   void _applyFilters() {
     List<Map<String, dynamic>> result = _allStudents;
 
-    
-    if (_activeFilter == 'pending') {
-  result = result.where((s) => s['status'] == 'pending').toList();
-} else if (_activeFilter == 'approved') {
-  result = result.where((s) => s['status'] == 'approved').toList();
-} else if (_activeFilter == 'active') {
-  result = result.where((s) => s['status'] == 'active').toList();
-} else if (_activeFilter == 'rejected') {
-  result = result.where((s) => s['status'] == 'rejected').toList();
-} else if (_activeFilter == 'completed') {
-  result = result.where((s) => s['status'] == 'completed').toList();
-}
+    if (_activeFilter != 'all') {
+      result = result.where((s) => s['status'] == _activeFilter).toList();
+    }
 
-    
     if (_searchQuery.isNotEmpty) {
       result = result.where((s) {
-        final name =
-            (s['users']?['full_name'] ?? '').toString().toLowerCase();
-        final number =
-            (s['users']?['student_number'] ?? '').toString().toLowerCase();
+        final name = (s['users']?['full_name'] ?? '').toString().toLowerCase();
+        final number = (s['users']?['student_number'] ?? '').toString().toLowerCase();
         final company = (s['company_name'] ?? '').toString().toLowerCase();
         final query = _searchQuery.toLowerCase();
         return name.contains(query) ||
@@ -143,7 +126,7 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
     switch (status) {
       case 'pending':
         return {
-          'label': 'ONAY BEKLiYOR',
+          'label': 'ONAY BEKLİYOR',
           'color': const Color(0xFFE65100),
           'bgColor': const Color(0xFFFFF3E0),
         };
@@ -167,7 +150,7 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
         };
       case 'rejected':
         return {
-          'label': 'REDDEDiLDi',
+          'label': 'REDDEDİLDİ',
           'color': const Color(0xFFC62828),
           'bgColor': const Color(0xFFFFEBEE),
         };
@@ -180,7 +163,6 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
     }
   }
 
-  
   double _getProgress(String status) {
     switch (status) {
       case 'pending':
@@ -199,17 +181,14 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
-      backgroundColor: const Color(0xFFF4F6F8), 
+      backgroundColor: const Color(0xFFF4F6F8),
       body: Column(
         children: [
-          
+          // Bordo header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
-            decoration: BoxDecoration(
-              color: primaryColor,
-            ),
+            decoration: BoxDecoration(color: primaryColor),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -241,87 +220,169 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
             ),
           ),
 
-          
-          Transform.translate(
-            offset: const Offset(0, -20),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (value) {
-                    _searchQuery = value;
-                    _applyFilters();
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'İsim, numara veya firma ara...',
-                    hintStyle: const TextStyle(color: Color(0xFF95A5A6), fontSize: 14),
-                    prefixIcon: Icon(Icons.search, color: primaryColor, size: 22),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? GestureDetector(
-                            onTap: () {
-                              _searchController.clear();
-                              _searchQuery = '';
-                              _applyFilters();
-                            },
-                            child: const Icon(Icons.close, color: Color(0xFF95A5A6), size: 20),
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          
-          Transform.translate(
-            offset: const Offset(0, -8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  _buildFilterChip('Tümü (${_allStudents.length})', 'all'),
-                  _buildFilterChip('Onay Bekleyen ($_pendingCount)', 'pending'),
-                  _buildFilterChip('Onaylanan ($_approvedCount)', 'approved'),
-                  _buildFilterChip('Stajda ($_activeCount)', 'active'),
-                  _buildFilterChip('Tamamlanan ($_completedCount)', 'completed'),
-                  _buildFilterChip('Reddedilen ($_rejectedCount)', 'rejected'),
-                ],
-              ),
-            ),
-          ),
-
-          
+          // Asıl içerik
           Expanded(
             child: _isLoading
                 ? Center(child: CircularProgressIndicator(color: primaryColor))
-                : _filteredStudents.isEmpty
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
-                        color: primaryColor,
-                        onRefresh: _loadStudents,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                          itemCount: _filteredStudents.length,
-                          itemBuilder: (context, index) {
-                            return _buildStudentCard(_filteredStudents[index]);
-                          },
+                : RefreshIndicator(
+                    color: primaryColor,
+                    onRefresh: _loadStudents,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                      children: [
+                        // ===== STAT KARTLARI (2x2 grid, YENİ) =====
+                        _buildStatGrid(),
+                        const SizedBox(height: 20),
+
+                        // ===== ARAMA KUTUSU =====
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: (value) {
+                              _searchQuery = value;
+                              _applyFilters();
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'İsim, numara veya firma ara...',
+                              hintStyle: const TextStyle(color: Color(0xFF95A5A6), fontSize: 14),
+                              prefixIcon: Icon(Icons.search, color: primaryColor, size: 22),
+                              suffixIcon: _searchQuery.isNotEmpty
+                                  ? GestureDetector(
+                                      onTap: () {
+                                        _searchController.clear();
+                                        _searchQuery = '';
+                                        _applyFilters();
+                                      },
+                                      child: const Icon(Icons.close, color: Color(0xFF95A5A6), size: 20),
+                                    )
+                                  : null,
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 16),
+
+                        // ===== FİLTRE CHİPS =====
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _buildFilterChip('Tümü (${_allStudents.length})', 'all'),
+                              _buildFilterChip('Onay Bekleyen ($_pendingCount)', 'pending'),
+                              _buildFilterChip('Onaylanan ($_approvedCount)', 'approved'),
+                              _buildFilterChip('Stajda ($_activeCount)', 'active'),
+                              _buildFilterChip('Tamamlanan ($_completedCount)', 'completed'),
+                              _buildFilterChip('Reddedilen ($_rejectedCount)', 'rejected'),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // ===== ÖĞRENCİ LİSTESİ =====
+                        if (_filteredStudents.isEmpty)
+                          _buildEmptyState()
+                        else
+                          ..._filteredStudents.map((s) => _buildStudentCard(s)),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===== STAT GRID  =====
+  Widget _buildStatGrid() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: _buildStatCard(
+              Icons.people_outline, 'Toplam', '${_allStudents.length}',
+              primaryColor, const Color(0xFFFCE4E4),
+            )),
+            const SizedBox(width: 12),
+            Expanded(child: _buildStatCard(
+              Icons.pending_actions_outlined, 'Onay Bekleyen', '$_pendingCount',
+              const Color(0xFFEA580C), const Color(0xFFFFF3E0),
+            )),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: _buildStatCard(
+              Icons.work_outline, 'Aktif Stajyer', '$_activeCount',
+              const Color(0xFF2563EB), const Color(0xFFE3F2FD),
+            )),
+            const SizedBox(width: 12),
+            Expanded(child: _buildStatCard(
+              Icons.check_circle_outline, 'Tamamlanan', '$_completedCount',
+              const Color(0xFF16A34A), const Color(0xFFE8F5E9),
+            )),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(IconData icon, String label, String value,
+      Color accentColor, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34, height: 34,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, color: accentColor, size: 17),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C3E50),
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Color(0xFF7F8C8D),
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -359,7 +420,6 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
     );
   }
 
-  
   // ========== ÖĞRENCİ KARTI ==========
   Widget _buildStudentCard(Map<String, dynamic> internship) {
     final student = internship['users'] as Map<String, dynamic>?;
@@ -371,12 +431,11 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
     final statusInfo = _getStatusInfo(status);
     final progress = _getProgress(status);
     final startDate = internship['start_date'] ?? '';
-    final endDate = internship['end_date'] ?? '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white, 
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFF1F2F6), width: 1.5),
         boxShadow: [
@@ -403,13 +462,11 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: 48, height: 48,
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8F9FA),
                         shape: BoxShape.circle,
@@ -470,8 +527,6 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
                   ],
                 ),
                 const SizedBox(height: 20),
-
-                
                 Row(
                   children: [
                     Expanded(
@@ -511,8 +566,6 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
                   ],
                 ),
                 const SizedBox(height: 16),
-
-                
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -546,37 +599,35 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
                   ],
                 ),
                 const SizedBox(height: 20),
-
-                
                 Row(
                   children: [
                     _buildActionButton(
-                     icon: Icons.phone_outlined,
-                     label: 'Ara',
-                     color: const Color(0xFF7F8C8D),
-                     onTap: () {
+                      icon: Icons.phone_outlined,
+                      label: 'Ara',
+                      color: const Color(0xFF7F8C8D),
+                      onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                           const SnackBar(
-                              content: Text('Telefon bilgisi final döneminde eklenecektir.'),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                           );
-                        },
-                      ),
-                 const SizedBox(width: 20),
-                  _buildActionButton(
-                     icon: Icons.email_outlined,
-                     label: 'E-posta',
-                     color: const Color(0xFF7F8C8D),
-                     onTap: () {
+                          const SnackBar(
+                            content: Text('Telefon bilgisi final döneminde eklenecektir.'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 20),
+                    _buildActionButton(
+                      icon: Icons.email_outlined,
+                      label: 'E-posta',
+                      color: const Color(0xFF7F8C8D),
+                      onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                           content: Text('E-posta bilgisi final döneminde eklenecektir.'),
-                           behavior: SnackBarBehavior.floating,
-                         ),
-                      );
-                     },
-                   ),
+                          const SnackBar(
+                            content: Text('E-posta bilgisi final döneminde eklenecektir.'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                    ),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -633,7 +684,9 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
 
   // ========== BOŞ DURUM ==========
   Widget _buildEmptyState() {
-    return Center(
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 48),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -643,6 +696,7 @@ class _AcademicianStudentsPageState extends State<AcademicianStudentsPageMobile>
             _searchQuery.isNotEmpty
                 ? 'Aramanızla eşleşen öğrenci bulunamadı.'
                 : 'Bu kategoride henüz öğrenci kaydı yok.',
+            textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey[500], fontSize: 15, fontWeight: FontWeight.w500),
           ),
         ],

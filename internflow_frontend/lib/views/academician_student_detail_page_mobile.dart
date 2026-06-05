@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'ai_analysis_detail_page.dart';
 
 class AcademicianStudentDetailMobile extends StatefulWidget {
   final Map<String, dynamic> internship;
@@ -369,23 +370,42 @@ class _AcademicianStudentDetailPageState
                   Row(
                     children: [
                       Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                             ScaffoldMessenger.of(context).showSnackBar(
-                               const SnackBar(
-                                 content: Row(
-                                   children: [
-                                     Icon(Icons.auto_awesome, color: Colors.white, size: 18),
-                                     SizedBox(width: 10),
-                                     Expanded(child: Text('AI Analiz modülü final döneminde aktifleşecektir.')),
-                                    ],
-                                   ),
-                                  backgroundColor: Color(0xFF5A0B0B),
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: Duration(seconds: 3),
-                                ),
-                               );
-                            },
+                      child: GestureDetector(
+                     onTap: () {
+    
+                 final stajDefteri = _documents.where(
+                  (d) => d['doc_type'] == 'staj_defteri',
+                    ).toList();
+
+                   if (stajDefteri.isEmpty) {
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         const SnackBar(
+                           content: Row(
+                             children: [
+                               Icon(Icons.info_outline, color: Colors.white, size: 18),
+                               SizedBox(width: 10),
+                               Expanded(child: Text('Öğrenci henüz staj defteri yüklemedi.')),
+                             ],
+                           ),
+                        backgroundColor: Color(0xFF5A0B0B),
+                        behavior: SnackBarBehavior.floating,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                   return;
+              }
+
+    final documentId = stajDefteri.first['document_id'].toString();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AiAnalysisDetailPage(
+          documentId: documentId,
+          studentName: _studentName,
+        ),
+      ),
+    );
+  },
                           child: Container(
                             height: 125,
                             decoration: BoxDecoration(

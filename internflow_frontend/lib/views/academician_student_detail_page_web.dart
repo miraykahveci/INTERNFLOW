@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'ai_analysis_detail_page.dart';
 
 class AcademicianStudentDetailWeb extends StatefulWidget {
   final Map<String, dynamic> internship;
@@ -602,20 +603,38 @@ class _AcademicianStudentDetailWebState extends State<AcademicianStudentDetailWe
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: () {
+          final stajDefteri = _documents.firstWhere(
+          (doc) => doc['doc_type'] == 'staj_defteri',
+          orElse: () => <String, dynamic>{},
+        );
+  
+        if (stajDefteri.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.auto_awesome, color: Colors.white, size: 18),
-                  SizedBox(width: 10),
-                  Expanded(child: Text('AI Analiz modülü final döneminde aktifleşecektir.')),
-                ],
-              ),
-              backgroundColor: Color(0xFF7C3AED),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        },
+           const SnackBar(
+             content: Row(
+               children: [
+                Icon(Icons.info_outline, color: Colors.white, size: 18),
+                SizedBox(width: 10),
+                Expanded(child: Text('Bu öğrencinin henüz yüklenmiş bir staj defteri yok.')),
+           ],
+         ),
+          backgroundColor: Color(0xFFEA580C),
+          behavior: SnackBarBehavior.floating,
+      ),
+    );
+    return;
+  }
+  
+      Navigator.push(
+        context,
+         MaterialPageRoute(
+          builder: (_) => AiAnalysisDetailPage(
+            documentId: stajDefteri['document_id'].toString(),
+            studentName: _studentName,
+         ),
+        ),
+       );
+     },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
@@ -661,7 +680,7 @@ class _AcademicianStudentDetailWebState extends State<AcademicianStudentDetailWe
                 child: const Icon(Icons.auto_awesome, color: Colors.white, size: 28),
               ),
               const SizedBox(width: 18),
-              const Expanded(
+               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -672,7 +691,7 @@ class _AcademicianStudentDetailWebState extends State<AcademicianStudentDetailWe
                           style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: textPrimary, letterSpacing: -0.3),
                         ),
                         SizedBox(width: 10),
-                        _ComingSoonBadge(),
+                        _ActiveBadge(),
                       ],
                     ),
                     SizedBox(height: 4),
@@ -1128,21 +1147,27 @@ class _AcademicianStudentDetailWebState extends State<AcademicianStudentDetailWe
   }
 }
 
-// ========== COMING SOON BADGE ==========
-class _ComingSoonBadge extends StatelessWidget {
-  const _ComingSoonBadge();
+class _ActiveBadge extends StatelessWidget {
+  const _ActiveBadge();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+        color: const Color(0xFF16A34A).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(5),
       ),
-      child: const Text(
-        'YAKINDA',
-        style: TextStyle(color: Color(0xFF7C3AED), fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.8),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.circle, color: Color(0xFF16A34A), size: 7),
+          SizedBox(width: 4),
+          Text(
+            'AKTİF',
+            style: TextStyle(color: Color(0xFF16A34A), fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.8),
+          ),
+        ],
       ),
     );
   }

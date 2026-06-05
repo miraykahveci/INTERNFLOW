@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'academician_students_page.dart';
 import 'academician_profile_page.dart';
+import 'academician_ai_analysis_page.dart';
 
 class AcademicianDashboardMobile extends StatefulWidget {
   const AcademicianDashboardMobile({super.key});
@@ -21,6 +22,7 @@ class _AcademicianDashboardMobileState extends State<AcademicianDashboardMobile>
   int _pendingCount = 0;
   int _sgkPendingCount = 0;
   int _activeCount = 0;
+  int _totalStudents = 0;
   int _selectedIndex = 0;
 
   List<Map<String, dynamic>> _pendingItems = [];
@@ -52,12 +54,23 @@ class _AcademicianDashboardMobileState extends State<AcademicianDashboardMobile>
       final List<Map<String, dynamic>> allInternships =
           List<Map<String, dynamic>>.from(internships);
 
+      
+      final Map<String, Map<String, dynamic>> uniqueStudents = {};
+      for (var intern in allInternships) {
+        final studentId = intern['student_id'] as String;
+        if (!uniqueStudents.containsKey(studentId)) {
+          uniqueStudents[studentId] = intern;
+        }
+      }
+      final uniqueList = uniqueStudents.values.toList();
+
+      
       int pending = 0;
       int sgkPending = 0;
       int active = 0;
       List<Map<String, dynamic>> items = [];
 
-      for (var intern in allInternships) {
+      for (var intern in uniqueList) {
         final status = intern['status'] as String;
 
         if (status == 'pending') {
@@ -77,6 +90,7 @@ class _AcademicianDashboardMobileState extends State<AcademicianDashboardMobile>
         _pendingCount = pending;
         _sgkPendingCount = sgkPending;
         _activeCount = active;
+        _totalStudents = uniqueList.length;
         _pendingItems = items;
         _isLoading = false;
       });
@@ -95,39 +109,26 @@ class _AcademicianDashboardMobileState extends State<AcademicianDashboardMobile>
     return _pendingItems.where((item) => item['type'] == _activeFilter).toList();
   }
 
-void _onItemTapped(int index) {
-  setState(() {
-    _selectedIndex = index;
-  });
-}
-
-Widget _getSelectedPage() {
-  switch (_selectedIndex) {
-    case 0:
-      return _buildHomeContent();
-    case 1:
-      return const AcademicianStudentsPage();
-    case 2:
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.auto_awesome, size: 64, color: Color(0xFFCCCCCC)),
-            SizedBox(height: 16),
-            Text('AI Analiz Laboratuvarı',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF546E7A))),
-            SizedBox(height: 8),
-            Text('Bu modül final döneminde aktifleşecektir.',
-                style: TextStyle(color: Color(0xFF90A4AE), fontSize: 13)),
-          ],
-        ),
-      );
-    case 3:
-       return const AcademicianProfilePage();
-    default:
-      return _buildHomeContent();
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
-}
+
+  Widget _getSelectedPage() {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildHomeContent();
+      case 1:
+        return const AcademicianStudentsPage();
+      case 2:
+        return const AcademicianAiAnalysisPage();
+      case 3:
+        return const AcademicianProfilePage();
+      default:
+        return _buildHomeContent();
+    }
+  }
 
   Future<void> _updateInternshipStatus(String internId, String newStatus, {String? reason}) async {
     try {
@@ -179,6 +180,16 @@ Widget _getSelectedPage() {
     }
   }
 
+  
+String get _firstName => _fullName.split(' ').first;
+
+String _getGreeting() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return 'Günaydın';
+  if (hour < 18) return 'İyi günler';
+  return 'İyi akşamlar';
+}
+
   void _showApprovalDialog(Map<String, dynamic> internData) {
     final studentName = internData['users']?['full_name'] ?? 'Öğrenci';
     final studentNumber = internData['users']?['student_number']?.toString() ?? '-';
@@ -222,7 +233,6 @@ Widget _getSelectedPage() {
                 ),
               ),
               const SizedBox(height: 16),
-
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -295,7 +305,6 @@ Widget _getSelectedPage() {
                 ),
               ),
               const SizedBox(height: 16),
-
               TextField(
                 controller: rejectReasonController,
                 maxLines: 2,
@@ -308,7 +317,6 @@ Widget _getSelectedPage() {
                 ),
               ),
               const SizedBox(height: 20),
-
               Row(
                 children: [
                   Expanded(
@@ -400,7 +408,7 @@ Widget _getSelectedPage() {
             unselectedItemColor: Colors.grey,
             type: BottomNavigationBarType.fixed,
             currentIndex: _selectedIndex,
-             onTap: _onItemTapped,
+            onTap: _onItemTapped,
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.dashboard_outlined),
@@ -428,7 +436,8 @@ Widget _getSelectedPage() {
       ),
     );
   }
-Widget _buildHomeContent() {
+
+  Widget _buildHomeContent() {
     return _isLoading
         ? const Center(child: CircularProgressIndicator())
         : Column(
@@ -437,48 +446,72 @@ Widget _buildHomeContent() {
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(20, 56, 20, 20),
                 decoration: BoxDecoration(color: primaryColor),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 25,
-                      backgroundColor: Colors.white,
-                      child: Text(
-                        _fullName.isNotEmpty ? _fullName[0] : '?',
-                        style: TextStyle(
-                          color: primaryColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(_fullName,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold)),
-                          Text(_title,
-                              style: const TextStyle(
-                                  color: Colors.white70, fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(Icons.notifications_outlined,
-                          color: Colors.white, size: 22),
-                    ),
-                  ],
-                ),
+                child: 
+                Row(
+  children: [
+    CircleAvatar(
+      radius: 25,
+      backgroundColor: Colors.white,
+      child: Text(
+        _fullName.isNotEmpty ? _fullName[0] : '?',
+        style: TextStyle(
+          color: primaryColor,
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+        ),
+      ),
+    ),
+    const SizedBox(width: 16),
+    Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+            ),
+            child: Text(
+              _title.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Alt satır: dinamik selamlama + isim
+          Text(
+            '${_getGreeting()}, $_firstName 👋',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ],
+      ),
+    ),
+    Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Icon(Icons.notifications_outlined,
+          color: Colors.white, size: 22),
+    ),
+  ],
+),
+
+
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -486,37 +519,76 @@ Widget _buildHomeContent() {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Card(
-                        elevation: 8,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 4),
-                          child: Row(
-                            children: [
-                              Icon(Icons.search, color: primaryColor),
-                              const SizedBox(width: 12),
-                               Expanded(
-                                child: TextField(
-                                 onChanged: (value) {
-      
-                                  },
-                                  
-                                  decoration: const InputDecoration(
-                                    hintText:
-                                        'Öğrenci Adı, No veya Bölüm Ara...',
-                                    hintStyle: TextStyle(
-                                        color: Colors.grey, fontSize: 14),
-                                    border: InputBorder.none,
-                                  ),
-                                ),
-                              ),
-                            ],
+                      // ===== KONTROL PANELİ KARTI =====
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryColor.withValues(alpha: 0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(13),
+                              ),
+                              child: Icon(Icons.dashboard_customize,
+                                  color: primaryColor, size: 26),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Kontrol Paneli',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: -0.3,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '$_totalStudents öğrenci yönetiminizde',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.85),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      _buildMiniStat('$_pendingCount', 'Onay'),
+                                      const SizedBox(width: 18),
+                                      _buildMiniStat('$_activeCount', 'Aktif'),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 20),
+
+                      // ===== STAT KARTLAR =====
                       Row(
                         children: [
                           _buildStatCard(
@@ -542,41 +614,49 @@ Widget _buildHomeContent() {
                         ],
                       ),
                       const SizedBox(height: 20),
+
+                      // ===== AI ANALİZ LABORATUVARI KARTI (TIKLANABILIR) =====
                       Card(
                         elevation: 2,
                         color: const Color(0xFFE8EAF6),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              Icon(Icons.auto_awesome,
-                                  color: Colors.indigo[700], size: 24),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('AI Analiz Raporu',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.indigo[700],
-                                            fontSize: 13)),
-                                    Text('Analiz modülü hazırlanıyor...',
-                                        style: TextStyle(
-                                            color: Colors.indigo[400],
-                                            fontSize: 11)),
-                                  ],
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => setState(() => _selectedIndex = 2),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                Icon(Icons.auto_awesome,
+                                    color: Colors.indigo[700], size: 24),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('AI Analiz Laboratuvarı',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.indigo[700],
+                                              fontSize: 13)),
+                                      Text('Staj defterleri için intihal kontrolü.',
+                                          style: TextStyle(
+                                              color: Colors.indigo[400],
+                                              fontSize: 11)),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              Icon(Icons.arrow_forward_ios,
-                                  size: 14, color: Colors.indigo[400]),
-                            ],
+                                Icon(Icons.arrow_forward_ios,
+                                    size: 14, color: Colors.indigo[400]),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 20),
+
+                      // ===== FILTRE CHIPS =====
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
@@ -625,6 +705,30 @@ Widget _buildHomeContent() {
           );
   }
 
+  // ===== MINI STAT (Kontrol Panel) =====
+  Widget _buildMiniStat(String value, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.75),
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildStatCard({
     required String value,
