@@ -408,7 +408,7 @@ class _StudentFilesPageMobileState extends State<StudentFilesPageMobile> {
     );
   }
 
-  // ========== YÖNERGE KARTI (BACKEND BAĞLI) ==========
+  // ========== YÖNERGE KARTI  ==========
   Widget _buildYonergeCard() {
     return Container(
       width: double.infinity,

@@ -37,7 +37,7 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
     _fetchYonergeInfo();
   }
 
-  // ========== YÖNERGE BACKEND'DEN ÇEK ==========
+  // ========== YÖNERGE  ==========
   Future<void> _fetchYonergeInfo() async {
     setState(() => _yonergeLoading = true);
     try {
@@ -98,7 +98,7 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
 
   Future<void> _downloadYonerge() async {
     try {
-      // Backend'in download endpoint'ini kullan (cache freshness + self-healing tetiklenir)
+     
       final uri = Uri.parse(ApiConfig.yonergeDownload);
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
@@ -152,7 +152,7 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
                       _buildInfoBanner(),
                       const SizedBox(height: 32),
 
-                      // ========== ÖNCELİKLİ: YÖNERGE KARTI (BACKEND BAĞLI) ==========
+                      // ========== YÖNERGE KARTI  ==========
                       _buildSectionTitle(
                         'Resmi Staj Yönergesi',
                         'Okulun resmi sitesinden otomatik senkronize edilir',
@@ -373,7 +373,7 @@ class _StudentFilesWebState extends State<StudentFilesWeb> {
     );
   }
 
-// ========== YÖNERGE CARD (BACKEND BAĞLI - PREMIUM) ==========
+// ========== YÖNERGE CARD  ==========
   Widget _buildYonergeCard() {
     final isHovered = _hoveredFile == 99;
     return MouseRegion(

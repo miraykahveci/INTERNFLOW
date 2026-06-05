@@ -11,7 +11,7 @@ class StudentProfileWeb extends StatefulWidget {
 }
 
 class _StudentProfileWebState extends State<StudentProfileWeb> {
-  // Premium color palette
+  
   static const Color primaryColor = Color(0xFF6A0F0F);
   static const Color primaryDark = Color(0xFF4A0808);
   static const Color purpleGlow = Color(0xFF8B5CF6);
