@@ -5,6 +5,7 @@ import 'student_process_page.dart';
 import 'student_profile_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'student_files_page.dart';
+import 'student_results_page.dart';
 
 class StudentDashboardMobile extends StatefulWidget {
   const StudentDashboardMobile({super.key});
@@ -14,8 +15,12 @@ class StudentDashboardMobile extends StatefulWidget {
 }
 
 class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
-  final Color primaryColor = const Color(0xFF6A0F0F);
-  final Color primaryDark = const Color(0xFF4A0808);
+  
+  static const Color primaryColor = Color(0xFF6A0F0F);
+  static const Color primaryDark = Color(0xFF4A0808);
+  static const Color purpleGlow = Color(0xFF8B5CF6);
+  static const Color bgCanvas = Color(0xFFF8F7FB);
+  static const Color textSecondary = Color(0xFF64748B);
 
   int _selectedIndex = 0;
   String _fullName = '';
@@ -71,6 +76,40 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
 
   String get _firstName => _fullName.split(' ').first;
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Günaydın';
+    if (hour < 18) return 'İyi günler';
+    return 'İyi akşamlar';
+  }
+
+  Map<String, dynamic> _getStatusInfo() {
+    switch (_internshipStatus) {
+      case 'pending':
+        return {'label': 'Onay Bekliyor', 'color': const Color(0xFFEA580C)};
+      case 'approved':
+        return {'label': 'Onaylandı', 'color': const Color(0xFF16A34A)};
+      case 'active':
+        return {'label': 'Stajda', 'color': const Color(0xFF2563EB)};
+      case 'completed':
+        return {'label': 'Tamamlandı', 'color': const Color(0xFF7C3AED)};
+      case 'rejected':
+        return {'label': 'Reddedildi', 'color': const Color(0xFFDC2626)};
+      default:
+        return {'label': 'Başvuru Yok', 'color': textSecondary};
+    }
+  }
+
+  int _getStepCount() {
+    switch (_internshipStatus) {
+      case 'pending': return 1;
+      case 'approved': return 2;
+      case 'active': return 4;
+      case 'completed': return 5;
+      default: return 0;
+    }
+  }
+
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
   }
@@ -84,23 +123,14 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
       case 2:
         return const StudentFilesPage();
       case 3:
-        return const StudentProfilePage();
+      return const StudentResultsPage();
+       case 4:
+      return const StudentProfilePage();
       default:
         return _buildHomeContent();
     }
   }
 
-  // ========== DURUM YARDIMCILARI ==========
-
-  int _getCompletedSteps() {
-    int count = 0;
-    if (_internshipStatus != 'none') count++;
-    if (['approved', 'active', 'completed'].contains(_internshipStatus)) count++;
-    if (['active', 'completed'].contains(_internshipStatus)) count++;
-    if (_internshipStatus == 'active' || _internshipStatus == 'completed') count++;
-    if (_internshipStatus == 'completed') count++;
-    return count;
-  }
 
   bool _isStepCompleted(int step) {
     switch (step) {
@@ -179,17 +209,10 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
     }
   }
 
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Günaydın';
-    if (hour < 18) return 'İyi günler';
-    return 'İyi akşamlar';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: bgCanvas,
       body: _getSelectedPage(),
       bottomNavigationBar: Container(
         margin: const EdgeInsets.fromLTRB(24, 0, 24, 24),
@@ -212,243 +235,400 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
             type: BottomNavigationBarType.fixed,
             currentIndex: _selectedIndex,
             onTap: _onItemTapped,
-            selectedFontSize: 11,
-            unselectedFontSize: 11,
+            selectedFontSize: 10,
+            unselectedFontSize: 10,
             items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home),
-                label: 'Ana Sayfa',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.timeline_outlined),
-                activeIcon: Icon(Icons.timeline),
-                label: 'Sürecim',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.folder_outlined),
-                activeIcon: Icon(Icons.folder),
-                label: 'Dosyalar',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outlined),
-                activeIcon: Icon(Icons.person),
-                label: 'Profil',
-              ),
-            ],
+            BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Ana Sayfa',
+          ),
+           BottomNavigationBarItem(
+           icon: Icon(Icons.timeline_outlined),
+           activeIcon: Icon(Icons.timeline),
+           label: 'Sürecim',
+           ),
+          BottomNavigationBarItem(
+          icon: Icon(Icons.folder_outlined),
+          activeIcon: Icon(Icons.folder),
+          label: 'Dosyalar',
+         ),
+         BottomNavigationBarItem(
+         icon: Icon(Icons.emoji_events_outlined),
+        activeIcon: Icon(Icons.emoji_events),
+         label: 'Sonuçlar',
+        ),
+          BottomNavigationBarItem(
+          icon: Icon(Icons.person_outlined),
+          activeIcon: Icon(Icons.person),
+          label: 'Profil',
+        ),
+       ],
           ),
         ),
       ),
     );
   }
 
-  // ========== ANA SAYFA ==========
+  // ========== ANA İÇERİK ==========
   Widget _buildHomeContent() {
-    return _isLoading
-        ? Center(child: CircularProgressIndicator(color: primaryColor))
-        : Column(
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(24, 56, 24, 28),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [primaryColor, primaryDark],
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(28),
-                    bottomRight: Radius.circular(28),
+    if (_isLoading) {
+      return Center(child: CircularProgressIndicator(color: primaryColor));
+    }
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _buildHeroHeader(),
+          _buildHeroProgressCard(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildApplicationCard(),
+                const SizedBox(height: 28),
+
+                _buildSectionHeader('Staj Yol Haritası', Icons.route),
+                const SizedBox(height: 14),
+                _buildRoadmapCard(),
+                const SizedBox(height: 28),
+
+                _buildSectionHeader('Belge Şablonları', Icons.file_copy),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 160,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      _buildDocumentCard(
+                        icon: Icons.book,
+                        title: 'Staj Defteri',
+                        subtitle: 'PDF',
+                        color: primaryColor,
+                        bgColor: const Color(0xFFFBE9E7),
+                        onTap: () => _downloadTemplate('staj_gunlugu.pdf'),
+                      ),
+                      _buildDocumentCard(
+                        icon: Icons.description,
+                        title: 'Kabul Formu',
+                        subtitle: 'PDF',
+                        color: const Color(0xFF1565C0),
+                        bgColor: const Color(0xFFE3F2FD),
+                        onTap: () => _downloadTemplate('kabul_formu.pdf'),
+                      ),
+                      _buildDocumentCard(
+                        icon: Icons.shield,
+                        title: 'Sigorta',
+                        subtitle: 'Bilgi',
+                        color: const Color(0xFF2E7D32),
+                        bgColor: const Color(0xFFE8F5E9),
+                        onTap: () => _onItemTapped(2),
+                      ),
+                    ],
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Row(
+                const SizedBox(height: 28),
+
+                _buildSectionHeader('Duyurular', Icons.campaign),
+                const SizedBox(height: 10),
+                _buildAnnouncementCard(),
+                const SizedBox(height: 12),
+                _buildSgkAnnouncementCard(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ========== HERO HEADER  ==========
+  Widget _buildHeroHeader() {
+    final statusInfo = _getStatusInfo();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [primaryColor, primaryDark],
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
+        ),
+      ),
+      child: Stack(
+        children: [
+          
+          Positioned(
+            right: -50, top: -50,
+            child: Container(
+              width: 180, height: 180,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [purpleGlow.withValues(alpha: 0.25), Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: 60, bottom: -30,
+            child: Container(
+              width: 110, height: 110,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [Colors.white.withValues(alpha: 0.08), Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+
+          // İçerik
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Üst satır: status rozeti + bildirim ikonu
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${_getGreeting()},',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                _firstName,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                            ],
+                        Container(
+                          width: 6, height: 6,
+                          decoration: BoxDecoration(
+                            color: statusInfo['color'] == textSecondary
+                                ? Colors.white
+                                : statusInfo['color'],
+                            shape: BoxShape.circle,
                           ),
                         ),
-                        Container(
-                          width: 40,
-                          height: 40,
-                          margin: const EdgeInsets.only(right: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 20),
-                        ),
-                        Container(
-                          width: 46,
-                          height: 46,
-                          decoration: BoxDecoration(
+                        const SizedBox(width: 7),
+                        Text(
+                          statusInfo['label'].toString().toUpperCase(),
+                          style: const TextStyle(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.8,
                           ),
-                          child: Center(
-                            child: Text(
-                              _firstName.isNotEmpty ? _firstName[0] : '?',
-                              style: TextStyle(
-                                color: primaryColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.notifications_outlined,
+                        color: Colors.white, size: 20),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+
+              
+              Text(
+                '${_getGreeting()}, $_firstName 👋',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.8,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Staj sürecini buradan kolayca takip edebilirsin.',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              
+              Row(
+                children: [
+                  _buildHeroChip(
+                    Icons.school,
+                    _department.isNotEmpty
+                        ? (_department.length > 18
+                            ? '${_department.substring(0, 18)}...'
+                            : _department)
+                        : 'Bölüm',
+                  ),
+                  const SizedBox(width: 8),
+                  _buildHeroChip(Icons.calendar_today, '2025-2026'),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 12),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ========== HERO PROGRESS CARD  ==========
+  Widget _buildHeroProgressCard() {
+    final stepCount = _getStepCount();
+    
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [primaryColor, primaryDark],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: purpleGlow.withValues(alpha: 0.3),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        // REDDEDİLME DURUMU KONTROLÜ
+        child: _internshipStatus == 'rejected'
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Başvurun Reddedildi',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Mevcut başvurun onaylanmadı. Sayfanın altından yeni bir başvuru oluşturabilirsin.',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.75),
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              )
+            
+            : Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Colors.white, Color(0xFFF5F3FF)],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.rocket_launch, color: primaryColor, size: 26),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Staj Yolculuğun',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '$stepCount / 5 Adım',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(5),
+                          child: LinearProgressIndicator(
+                            value: stepCount / 5,
+                            backgroundColor: Colors.white.withValues(alpha: 0.2),
+                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                            minHeight: 6,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            '%${(stepCount / 5 * 100).toInt()} Tamamlandı',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                      ),
-                      child: Row(
-                        children: [
-                          _buildMiniStat(
-                            icon: Icons.school,
-                            value: _department.length > 15 ? '${_department.substring(0, 15)}...' : _department,
-                            label: 'Bölüm',
-                          ),
-                          Container(width: 1, height: 30, color: Colors.white.withValues(alpha: 0.15)),
-                          _buildMiniStat(
-                            icon: Icons.trending_up,
-                            value: '${_getCompletedSteps()}/5',
-                            label: 'Adım',
-                          ),
-                          Container(width: 1, height: 30, color: Colors.white.withValues(alpha: 0.15)),
-                          _buildMiniStat(
-                            icon: Icons.description,
-                            value: _internshipStatus == 'none' ? '-' : _internshipData?['company_name']?.toString().split(' ').first ?? '-',
-                            label: 'Kurum',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildApplicationCard(),
-                      const SizedBox(height: 28),
-
-                      _buildSectionHeader('Staj Yol Haritası', Icons.route),
-                      const SizedBox(height: 14),
-                      _buildRoadmapCard(),
-                      const SizedBox(height: 28),
-
-                      _buildSectionHeader('Belge Şablonları', Icons.file_copy),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 160,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            _buildDocumentCard(
-                              icon: Icons.book,
-                              title: 'Staj Defteri',
-                              subtitle: 'PDF',
-                              color: primaryColor,
-                              bgColor: const Color(0xFFFBE9E7),
-                              onTap: () => _downloadTemplate('staj_gunlugu.pdf'),
-                            ),
-                            _buildDocumentCard(
-                              icon: Icons.description,
-                              title: 'Kabul Formu',
-                              subtitle: 'PDF',
-                              color: const Color(0xFF1565C0),
-                              bgColor: const Color(0xFFE3F2FD),
-                              onTap: () => _downloadTemplate('kabul_formu.pdf'),
-                            ),
-                            _buildDocumentCard(
-                              icon: Icons.shield,
-                              title: 'Sigorta',
-                              subtitle: 'Bilgi',
-                              color: const Color(0xFF2E7D32),
-                              bgColor: const Color(0xFFE8F5E9),
-                              onTap: () => _onItemTapped(2),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-
-                      _buildSectionHeader('Duyurular', Icons.campaign),
-                      const SizedBox(height: 10),
-                      _buildAnnouncementCard(),
-                      const SizedBox(height: 12),
-                      _buildSgkAnnouncementCard(),
-                    ],
                   ),
-                ),
+                ],
               ),
-            ],
-          );
-  }
-
-  // ========== HEADER MİNİ İSTATİSTİK ==========
-  Widget _buildMiniStat({
-    required IconData icon,
-    required String value,
-    required String label,
-  }) {
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, color: Colors.white.withValues(alpha: 0.6), size: 16),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
-              fontSize: 10,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -458,8 +638,7 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
     return Row(
       children: [
         Container(
-          width: 32,
-          height: 32,
+          width: 32, height: 32,
           decoration: BoxDecoration(
             color: primaryColor.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(9),
@@ -525,10 +704,9 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
             Row(
               children: [
                 Container(
-                  width: 52,
-                  height: 52,
+                  width: 52, height: 52,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [primaryColor, primaryDark],
@@ -619,8 +797,7 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
                 Row(
                   children: [
                     Container(
-                      width: 50,
-                      height: 50,
+                      width: 50, height: 50,
                       decoration: BoxDecoration(
                         color: _getStatusColor().withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
@@ -644,8 +821,17 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              _internshipStatus == 'pending' ? 'ONAY BEKLİYOR' : _internshipStatus == 'approved' ? 'ONAYLANDI' : _internshipStatus.toUpperCase(),
-                              style: TextStyle(color: _getStatusColor(), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                              _internshipStatus == 'pending'
+                                  ? 'ONAY BEKLİYOR'
+                                  : _internshipStatus == 'approved'
+                                      ? 'ONAYLANDI'
+                                      : _internshipStatus.toUpperCase(),
+                              style: TextStyle(
+                                color: _getStatusColor(),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
                         ],
@@ -750,13 +936,12 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
     return Row(
       children: [
         Container(
-          width: 40,
-          height: 40,
+          width: 40, height: 40,
           decoration: BoxDecoration(
             gradient: completed
                 ? const LinearGradient(colors: [Color(0xFF43A047), Color(0xFF2E7D32)])
                 : current
-                    ? LinearGradient(colors: [primaryColor, primaryDark])
+                    ? const LinearGradient(colors: [primaryColor, primaryDark])
                     : null,
             color: locked ? const Color(0xFFF0F0F0) : null,
             borderRadius: BorderRadius.circular(12),
@@ -802,8 +987,7 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
           ),
         if (completed)
           Container(
-            width: 24,
-            height: 24,
+            width: 24, height: 24,
             decoration: BoxDecoration(
               color: const Color(0xFFE8F5E9),
               borderRadius: BorderRadius.circular(7),
@@ -859,8 +1043,7 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 48, height: 48,
               decoration: BoxDecoration(
                 color: bgColor,
                 borderRadius: BorderRadius.circular(14),
@@ -884,7 +1067,7 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
     );
   }
 
-  // ========== DUYURU KARTI ==========
+  // ========== DUYURU KARTLARI ==========
   Widget _buildAnnouncementCard() {
     return Container(
       width: double.infinity,
@@ -905,8 +1088,7 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 40, height: 40,
             decoration: BoxDecoration(
               color: const Color(0xFFE3F2FD),
               borderRadius: BorderRadius.circular(12),
@@ -953,8 +1135,7 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 40, height: 40,
             decoration: BoxDecoration(
               color: const Color(0xFFE8F5E9),
               borderRadius: BorderRadius.circular(12),

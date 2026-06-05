@@ -16,7 +16,7 @@ class StudentDashboardWeb extends StatefulWidget {
 }
 
 class _StudentDashboardWebState extends State<StudentDashboardWeb> {
-  // Premium color palette
+  
   static const Color primaryColor = Color(0xFF6A0F0F);
   static const Color primaryDark = Color(0xFF4A0808);
   static const Color primaryLight = Color(0xFF8B1818);
@@ -215,13 +215,12 @@ class _StudentDashboardWebState extends State<StudentDashboardWeb> {
             const SizedBox(width: 8),
             _buildNavItem(3, Icons.emoji_events_outlined, 'Sonuçlarım'),
             const Spacer(),
-            
 
-            // Notifications
+            
             _buildIconButton(Icons.notifications_outlined, () {}),
             const SizedBox(width: 12),
 
-            // User profile chip
+            // User profile 
             Material(
               color: Colors.transparent,
               child: InkWell(
@@ -340,15 +339,15 @@ class _StudentDashboardWebState extends State<StudentDashboardWeb> {
   }
 
   Widget _buildMainContent() {
-  switch (_selectedIndex) {
-    case 0: return _buildHomeContent();
-    case 1: return const StudentProcessPage();
-    case 2: return const StudentFilesPage();
-    case 3: return const StudentResultsPage();
-    case 4: return const StudentProfilePage();
-    default: return _buildHomeContent();
+    switch (_selectedIndex) {
+      case 0: return _buildHomeContent();
+      case 1: return const StudentProcessPage();
+      case 2: return const StudentFilesPage();
+      case 3: return const StudentResultsPage();
+      case 4: return const StudentProfilePage();
+      default: return _buildHomeContent();
+    }
   }
-}
 
   // ========== HOME ==========
   Widget _buildHomeContent() {
@@ -367,7 +366,7 @@ class _StudentDashboardWebState extends State<StudentDashboardWeb> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Stat cards
+                    
                     Row(
                       children: [
                         Expanded(child: _buildStatCard(0, Icons.assignment_outlined, 'Aktif Başvuru', _internshipStatus == 'none' ? '0' : '1', primaryColor)),
@@ -381,7 +380,7 @@ class _StudentDashboardWebState extends State<StudentDashboardWeb> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Application + Roadmap
+                    
                     IntrinsicHeight(
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -428,9 +427,11 @@ class _StudentDashboardWebState extends State<StudentDashboardWeb> {
     );
   }
 
-  // ========== HERO (BORDO BANNER) ==========
+  // ========== HERO CARD ==========
   Widget _buildHeroSection() {
     final statusInfo = _getStatusInfo();
+    final isRejected = _internshipStatus == 'rejected';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(40, 56, 40, 56),
@@ -563,39 +564,55 @@ class _StudentDashboardWebState extends State<StudentDashboardWeb> {
                     ),
                   ),
 
-                  // Hero progress card
-                  // Hero progress card (yatay dikdörtgen + hover)
-MouseRegion(
-  onEnter: (_) => setState(() => _hoveredHeroCard = true),
-  onExit: (_) => setState(() => _hoveredHeroCard = false),
-  child: AnimatedContainer(
-    duration: const Duration(milliseconds: 250),
-    curve: Curves.easeOut,
-    transform: Matrix4.translationValues(0, _hoveredHeroCard ? -6 : 0, 0),
-    width: 380,
-    padding: const EdgeInsets.all(24),
-    decoration: BoxDecoration(
-      color: Colors.white.withValues(alpha: _hoveredHeroCard ? 0.18 : 0.1),
-      borderRadius: BorderRadius.circular(18),
-      border: Border.all(
-        color: Colors.white.withValues(alpha: _hoveredHeroCard ? 0.4 : 0.2),
-        width: _hoveredHeroCard ? 1.5 : 1,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: purpleGlow.withValues(alpha: _hoveredHeroCard ? 0.4 : 0.2),
-          blurRadius: _hoveredHeroCard ? 40 : 32,
-          offset: Offset(0, _hoveredHeroCard ? 16 : 12),
-        ),
-        if (_hoveredHeroCard)
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.15),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+                  // Hero progress card 
+                  MouseRegion(
+                    onEnter: (_) => setState(() => _hoveredHeroCard = true),
+                    onExit: (_) => setState(() => _hoveredHeroCard = false),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOut,
+                      transform: Matrix4.translationValues(0, _hoveredHeroCard ? -6 : 0, 0),
+                      width: 380,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: _hoveredHeroCard ? 0.18 : 0.1),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: _hoveredHeroCard ? 0.4 : 0.2),
+                          width: _hoveredHeroCard ? 1.5 : 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isRejected ? const Color(0xFFDC2626) : purpleGlow)
+                                .withValues(alpha: _hoveredHeroCard ? 0.4 : 0.2),
+                            blurRadius: _hoveredHeroCard ? 40 : 32,
+                            offset: Offset(0, _hoveredHeroCard ? 16 : 12),
+                          ),
+                          if (_hoveredHeroCard)
+                            BoxShadow(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                        ],
+                      ),
+                      child: isRejected
+                          ? _buildHeroRejectedContent()
+                          : _buildHeroProgressContent(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-      ],
-    ),
-    child: Row(
+        ],
+      ),
+    );
+  }
+
+  // ========== HERO PROGRESS CONTENT  ==========
+  Widget _buildHeroProgressContent() {
+    return Row(
       children: [
         AnimatedContainer(
           duration: const Duration(milliseconds: 250),
@@ -630,18 +647,14 @@ MouseRegion(
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 12),
               ),
               const SizedBox(height: 12),
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: _getStepCount() / 5,
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                      minHeight: 7,
-                    ),
-                  ),
-                ],
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: _getStepCount() / 5,
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                  minHeight: 7,
+                ),
               ),
               const SizedBox(height: 6),
               Align(
@@ -655,15 +668,96 @@ MouseRegion(
           ),
         ),
       ],
-    ),
-  ),
-),
+    );
+  }
+
+  // ========== HERO REJECTED CONTENT ==========
+  Widget _buildHeroRejectedContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              width: 60, height: 60,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFDC2626), Color(0xFFB91C1C)],
+                ),
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFDC2626).withValues(alpha: 0.5),
+                    blurRadius: _hoveredHeroCard ? 24 : 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.cancel_outlined, color: Colors.white, size: 30),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Başvurun Reddedildi',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Yeni bir başvuru oluşturarak\nsüreci yeniden başlatabilirsin.',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                      height: 1.4,
+                    ),
+                  ),
                 ],
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          width: double.infinity,
+          height: 40,
+          child: ElevatedButton.icon(
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ApplicationFormPage()),
+              );
+              if (result == true) _loadAllData();
+            },
+            icon: const Icon(Icons.add, size: 16, color: primaryColor),
+            label: const Text(
+              'Yeni Başvuru Yap',
+              style: TextStyle(
+                color: primaryColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 6,
+              shadowColor: Colors.black.withValues(alpha: 0.3),
+            ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -757,7 +851,6 @@ MouseRegion(
                     size: 22,
                   ),
                 ),
-               
               ],
             ),
             const SizedBox(height: 22),
@@ -782,7 +875,7 @@ MouseRegion(
     );
   }
 
-// ========== APPLICATION CARD WITH HOVER ==========
+  // ========== APPLICATION CARD WITH HOVER ==========
   Widget _buildApplicationCard() {
     final statusInfo = _getStatusInfo();
     final isEmpty = _internshipStatus == 'none' || _internshipStatus == 'rejected';
@@ -867,44 +960,44 @@ MouseRegion(
             const SizedBox(height: 26),
             if (isEmpty) ...[
               Container(
-  width: double.infinity,
-  padding: const EdgeInsets.all(28),
-  decoration: BoxDecoration(
-    gradient: LinearGradient(
-      colors: [
-        primaryColor.withValues(alpha: 0.04),
-        purpleGlow.withValues(alpha: 0.04),
-      ],
-    ),
-    borderRadius: BorderRadius.circular(14),
-    border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
-  ),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-      Container(
-        width: 64, height: 64,
-        decoration: BoxDecoration(
-          color: primaryColor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Icon(Icons.inbox_outlined, size: 32, color: primaryColor),
-      ),
-      const SizedBox(height: 16),
-      const Text(
-        'Henüz aktif başvurun yok',
-        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textPrimary),
-        textAlign: TextAlign.center,
-      ),
-      const SizedBox(height: 6),
-      const Text(
-        'Staj sürecini başlatmak için yeni bir başvuru oluştur',
-        style: TextStyle(fontSize: 12, color: textSecondary),
-        textAlign: TextAlign.center,
-      ),
-    ],
-  ),
-),
+                width: double.infinity,
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      primaryColor.withValues(alpha: 0.04),
+                      purpleGlow.withValues(alpha: 0.04),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 64, height: 64,
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(Icons.inbox_outlined, size: 32, color: primaryColor),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Henüz aktif başvurun yok',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textPrimary),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Staj sürecini başlatmak için yeni bir başvuru oluştur',
+                      style: TextStyle(fontSize: 12, color: textSecondary),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
@@ -1003,9 +1096,9 @@ MouseRegion(
         ),
       ),
     );
-  } 
+  }
 
-// ========== ROADMAP CARD WITH HOVER ==========
+  // ========== ROADMAP CARD WITH HOVER ==========
   Widget _buildRoadmapCard() {
     final steps = [
       {'title': 'Başvuru Oluştur', 'icon': Icons.edit_note},
