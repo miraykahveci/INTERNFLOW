@@ -1,19 +1,8 @@
-"""
-Similarity Engine - İntihal Tespitinin Matematik Motoru
-
-Bu modül iki görev yapar:
-  1. find_similar_analyses() → pgvector ile en benzer defterleri bulur (RPC)
-  2. calculate_risk_level()  → benzerlik skorundan risk seviyesi belirler (Python)
-
-- Benzerlik: pgvector cosine distance (<=> operatörü), veritabanı seviyesinde
-- Risk: Python if/else, threshold tabanlı karar
-"""
-
 from app.db.supabase_client import supabase
 
 
 # ==========================================================================
-# RISK THRESHOLD'LARI (kararlaştırılan değerler)
+# RISK THRESHOLD'LARI 
 # ==========================================================================
 HIGH_RISK_THRESHOLD = 0.80    
 MEDIUM_RISK_THRESHOLD = 0.60  
@@ -25,7 +14,7 @@ class SimilarityEngine:
     def find_similar_analyses(
         self,
         query_embedding: list[float],
-        exclude_analysis_id: str,
+        exclude_document_id: str,
         match_count: int = 5,
     ) -> list[dict]:
        
@@ -34,7 +23,7 @@ class SimilarityEngine:
                 "match_analysis",
                 {
                     "query_embedding": query_embedding,
-                    "exclude_analysis_id": exclude_analysis_id,
+                    "exclude_document_id": exclude_document_id,
                     "match_count": match_count,
                 },
             ).execute()
@@ -48,11 +37,11 @@ class SimilarityEngine:
     def get_top_match(
         self,
         query_embedding: list[float],
-        exclude_analysis_id: str,
+        exclude_document_id: str,
     ) -> dict | None:
         
         matches = self.find_similar_analyses(
-            query_embedding, exclude_analysis_id, match_count=1
+            query_embedding, exclude_document_id, match_count=1
         )
         return matches[0] if matches else None
 
@@ -109,7 +98,7 @@ if __name__ == "__main__":
     dummy_vector = [0.1] * 768
     matches = engine.find_similar_analyses(
         query_embedding=dummy_vector,
-        exclude_analysis_id="00000000-0000-0000-0000-000000000000",
+        exclude_document_id="00000000-0000-0000-0000-000000000000",
         match_count=5,
     )
     print(f"  Bulunan eşleşme sayısı: {len(matches)}")

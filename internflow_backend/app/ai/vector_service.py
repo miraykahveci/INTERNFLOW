@@ -1,26 +1,10 @@
-"""
-Vector Service - Embedding üretimi (Strategy Pattern)
-
-Bu modül metni 768 boyutlu sayısal vektöre çevirir.
-İki farklı strateji destekler:
-  - LocalEmbeddingStrategy: sentence-transformers ile lokal (geliştirme)
-  - APIEmbeddingStrategy: Hugging Face Inference API (production)
-
-Hangisinin kullanılacağı .env'deki EMBEDDING_MODE ile belirlenir.
-
-Mimari not: Strategy Pattern (Gang of Four) kullanıldı.
-Aynı arayüz (EmbeddingStrategy), iki farklı implementasyon.
-Runtime'da environment variable ile seçim yapılır.
-Bu, Open/Closed prensibi (SOLID) ile uyumludur.
-"""
-
 import os
 import requests
 from abc import ABC, abstractmethod
 
 
 # ==========================================================================
-# 1. ARAYÜZ (ABSTRACT BASE CLASS)
+# 1. ARAYÜZ 
 # ==========================================================================
 class EmbeddingStrategy(ABC):
     """Embedding üreten servislerin uyması gereken arayüz"""
@@ -42,13 +26,7 @@ class EmbeddingStrategy(ABC):
 # sentence-transformers ile PyTorch tabanlı
 # ==========================================================================
 class LocalEmbeddingStrategy(EmbeddingStrategy):
-    """
-    sentence-transformers kütüphanesi ile lokal embedding üretir.
-
-    SENIOR TRICK: import ifadesi __init__ içine konuldu.
-    Production'da (API modunda) bu sınıf hiç oluşturulmadığı için
-    ağır PyTorch kütüphanesi RAM'e yüklenmez. RAM tasarrufu sağlanır.
-    """
+   
 
     MODEL_NAME = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 
@@ -71,15 +49,12 @@ class LocalEmbeddingStrategy(EmbeddingStrategy):
 
 
 # ==========================================================================
-# 3. API MOTORU (Production - Hugging Face sunucularında çalışır)
-#   HTTP isteği atar
+# 3. API MOTORU (Production - Hugging Face sunucu
+#   HTTP istek
 # ==========================================================================
 class APIEmbeddingStrategy(EmbeddingStrategy):
-    """
-    Hugging Face Inference API üzerinden embedding üretir.
-    Backend hafif kalır, model HF sunucularında çalışır.
-    """
 
+   
     API_URL = (
         "https://api-inference.huggingface.co/pipeline/feature-extraction/"
         "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
@@ -108,7 +83,7 @@ class APIEmbeddingStrategy(EmbeddingStrategy):
                 headers=self.headers,
                 json={
                     "inputs": text,
-                    "options": {"wait_for_model": True},  # Cold start'ı bekle
+                    "options": {"wait_for_model": True},  
                 },
                 timeout=30,
             )
@@ -131,7 +106,7 @@ class APIEmbeddingStrategy(EmbeddingStrategy):
 
 
 # ==========================================================================
-# 4. FACTORY (Doğru stratejiyi seçen fonksiyon)
+# 4. FACTORY 
 # ==========================================================================
 def _create_embedding_service() -> EmbeddingStrategy:
     """EMBEDDING_MODE'a göre doğru strateji oluşturur"""
@@ -149,7 +124,7 @@ def _create_embedding_service() -> EmbeddingStrategy:
 
 
 # ==========================================================================
-# 5. SINGLETON (Tek instance — model her seferde yeniden yüklenmesin)
+# 5. SINGLETON 
 # ==========================================================================
 _embedder_instance: EmbeddingStrategy | None = None
 

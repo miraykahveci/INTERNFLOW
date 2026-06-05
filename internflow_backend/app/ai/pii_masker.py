@@ -1,23 +1,3 @@
-"""
-PII Masker - Kişisel Veri Maskeleme (KVKK Uyumluluğu)
-
-Bu modül metindeki kişisel verileri regex ile tespit edip maskeler.
-Pipeline'da embedding'den ÖNCE çalışır (Privacy by Design).
-Böylece vektör veritabanına yazılan temsiller PII içermez.
-
-Maskelenen veriler:
-  - Email          → [MASKED_EMAIL]
-  - Telefon        → [MASKED_PHONE]
-  - TC Kimlik No   → [MASKED_TCKN]
-  - Çalışan/Stajyer ID → [MASKED_EMPLOYEE_ID]
-  - URL            → [MASKED_URL]
-  - İsim (liste)   → [MASKED_NAME]
-
-Mimari not: Regex tabanlı desen eşleştirme.
-İki katman: (1) Net desenli PII (email, telefon vb.) otomatik,
-(2) İsimler kontrollü liste ile. Bu, false-positive riskini azaltır.
-"""
-
 import re
 
 

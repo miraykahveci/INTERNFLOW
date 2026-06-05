@@ -1,18 +1,3 @@
-"""
-Text Extractor - Belgeden metin çıkarma
-
-Bu modül yüklenen belgeden ham metni çıkarır.
-Pipeline'ın giriş katmanıdır: PDF/belge → düz metin
-
-Desteklenen formatlar:
-  - PDF: pdfplumber ile (saf Python, Türkçe destekli, deploy dostu)
-  - Görüntü (PNG/JPG): OCR arayüzü hazır, Tesseract kurulunca aktif
-
-Mimari not: Format-agnostic tasarım.
-Yeni format desteği eklemek, mevcut kodu bozmadan mümkün (Open/Closed).
-Tesseract kurulu değilse sistem çökmez, açıklayıcı hata verir (graceful degradation).
-"""
-
 import io
 
 
@@ -60,10 +45,7 @@ class TextExtractor:
         return full_text
 
     def _extract_from_image(self, file_bytes: bytes) -> str:
-        """
-        Görüntüden metin çıkarır (OCR - Tesseract ile).
-        Mimari OCR'a hazır; sadece sistem bağımlılığı eklenince aktif olacak.
-        """
+       
         try:
             import pytesseract
             from PIL import Image
@@ -106,7 +88,7 @@ def get_text_extractor() -> TextExtractor:
 
 
 # ==========================================================================
-# TEST ALANI — python -m app.ai.text_extractor ile çalıştırılır
+# TEST ALANI — python -m app.ai.text_extractor 
 # ==========================================================================
 if __name__ == "__main__":
     import sys
