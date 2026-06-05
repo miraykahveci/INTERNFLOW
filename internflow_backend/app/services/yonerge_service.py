@@ -1,11 +1,3 @@
-"""
-Yönerge Service
-- Okulun resmi sitesinden yönergeyi (PDF) lazy check ile senkronize eder
-- HTTP HEAD request ile değişiklik kontrolü yapar
-- Değişmişse PDF'i indirip Supabase Storage'a kaydeder
-- 30 günden eski cache'leri otomatik yeniler
-"""
-
 import os
 import httpx
 from datetime import datetime, timezone, timedelta
@@ -17,7 +9,6 @@ CACHE_FRESHNESS_DAYS = 30
 
 
 def _get_supabase_admin_client() -> Client:
-    """Service role key ile Supabase client oluştur (Storage write için gerekli)"""
     url = os.getenv("SUPABASE_URL")
     service_key = os.getenv("SUPABASE_SERVICE_KEY")
     if not url or not service_key:
@@ -26,10 +17,7 @@ def _get_supabase_admin_client() -> Client:
 
 
 async def _fetch_remote_metadata(url: str) -> Optional[Dict[str, Any]]:
-    """
-    Okulun sitesinden HEAD request ile metadata al
-    Returns: { 'last_modified': str, 'content_length': int, 'etag': str }
-    """
+   
     try:
         async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
             response = await client.head(url)
@@ -58,7 +46,7 @@ async def _download_pdf(url: str) -> Optional[bytes]:
 
 
 def _parse_last_modified(header_value: Optional[str]) -> Optional[datetime]:
-    """HTTP Last-Modified header'ını datetime'a çevir"""
+   
     if not header_value:
         return None
     try:
@@ -71,7 +59,7 @@ def _parse_last_modified(header_value: Optional[str]) -> Optional[datetime]:
 
 
 def _is_cache_fresh(last_checked: Optional[str]) -> bool:
-    """Cache 30 gün içinde kontrol edilmiş mi?"""
+   
     if not last_checked:
         return False
     try:
@@ -85,7 +73,7 @@ def _is_cache_fresh(last_checked: Optional[str]) -> bool:
         return False
     
 def _storage_file_exists(supabase: Client, bucket: str, path: str) -> bool:
-    """Supabase Storage'da dosyanın gerçekten var olup olmadığını kontrol et"""
+    
     try:
         
         files = supabase.storage.from_(bucket).list()
@@ -97,10 +85,7 @@ def _storage_file_exists(supabase: Client, bucket: str, path: str) -> bool:
 
 
 async def get_yonerge_info() -> Dict[str, Any]:
-    """
-    Ana fonksiyon: Yönerge bilgilerini getirir, gerekirse senkronize eder.
-    Lazy check + Self-healing pattern.
-    """
+   
     supabase = _get_supabase_admin_client()
 
     
@@ -244,11 +229,7 @@ def _build_response(cache: Dict[str, Any], supabase: Client, source: str) -> Dic
 
 
 async def download_yonerge_pdf() -> Optional[bytes]:
-    """
-    PDF'i okuldan indirip döndür (proxy modu).
-    İlk olarak get_yonerge_info çağırır (cache freshness için),
-    sonra Storage'dan PDF byte'larını okur.
-    """
+   
     
     await get_yonerge_info()
 

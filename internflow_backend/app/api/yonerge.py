@@ -1,10 +1,3 @@
-"""
-Yönerge API Router
-2 endpoint:
-- GET /api/v1/yonerge/info  → Yönerge metadata (lazy sync)
-- GET /api/v1/yonerge/download → PDF stream (lazy sync + Storage'dan oku)
-"""
-
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 import io
@@ -16,11 +9,7 @@ router = APIRouter(prefix="/yonerge", tags=["Yönerge"])
 
 @router.get("/info")
 async def yonerge_info():
-    """
-    Yönerge bilgilerini getirir.
-    İlk istek veya 30 günden eski cache → uzaktan kontrol yapar.
-    Değişmişse PDF'i Supabase Storage'a otomatik günceller.
-    """
+    
     try:
         result = await get_yonerge_info()
         if not result.get('success'):
@@ -51,7 +40,7 @@ async def yonerge_download():
             media_type="application/pdf",
             headers={
                 "Content-Disposition": 'inline; filename="staj_yonergesi.pdf"',
-                "Cache-Control": "public, max-age=3600",  # tarayıcı 1 saat cache'lesin
+                "Cache-Control": "public, max-age=3600",  
             },
         )
     except HTTPException:
