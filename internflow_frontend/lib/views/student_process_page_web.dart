@@ -182,6 +182,31 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
         _sgkBelgesiFileName = file.name;
       }
     });
+    
+    
+if (docType == 'sgk_belgesi' && _islakImzaUploaded) {
+  await Supabase.instance.client
+      .from('internship')
+      .update({'status': 'active'})
+      .eq('intern_id', _internId!);
+
+  setState(() {
+    _internshipStatus = 'active';
+    _progressPercentage = 70;
+  });
+}
+
+if (docType == 'basvuru_formu' && _sgkBelgesiUploaded) {
+  await Supabase.instance.client
+      .from('internship')
+      .update({'status': 'active'})
+      .eq('intern_id', _internId!);
+
+  setState(() {
+    _internshipStatus = 'active';
+    _progressPercentage = 70;
+  });
+}
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -241,8 +266,8 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
       return StepStatus.locked;
     }
     if (stepIndex == 6) {
-      // KEY FIX: staj tamamlandıysa ADIM 6 da completed olmalı (current değil)
-      if (_internshipStatus == 'completed') return StepStatus.completed;
+     if (_internshipStatus == 'completed') return StepStatus.completed;
+     if (_internshipStatus == 'active') return StepStatus.current;
       return StepStatus.locked;
     }
     return StepStatus.locked;
@@ -569,10 +594,11 @@ if (_internshipStatus == 'rejected') ...[
 
   // ========== TIMELINE GRID ==========
   Widget _buildTimelineGrid() {
-    // ADIM 6 subtitle artık dinamik: tamamlandıysa "başarıyla tamamlandı"
     final step6Subtitle = _internshipStatus == 'completed'
-        ? 'Stajınız başarıyla tamamlandı'
-        : 'Staj bitiminde aktifleşir';
+    ? 'Stajınız başarıyla tamamlandı'
+    : _internshipStatus == 'active'
+        ? 'Defter yükleyebilirsiniz'
+        : 'Staj döneminde aktifleşir';
 
     final steps = [
       _StepData(
@@ -646,8 +672,17 @@ if (_internshipStatus == 'rejected') ...[
       } else if (_sgkBelgesiUploaded) {
         customContent = _buildUploadedFileInfo(_sgkBelgesiFileName!);
       }
-    } else if (step.stepNumber == 6 && _internshipStatus == 'completed') {
-      // YENİ: ADIM 6 tamamlandığında yumuşak yönlendirme banner'ı
+      
+    } else if (step.stepNumber == 6 && _internshipStatus == 'active') {
+  customContent = _buildUploadBox(
+    docType: 'staj_defteri',
+    title: 'Staj Defteri',
+    description: 'Staj sürenizdeki günlük raporları PDF olarak yükleyin. AI sistemi otomatik olarak intihal kontrolü ve özet üretir.',
+  );
+}
+    
+    
+    else if (step.stepNumber == 6 && _internshipStatus == 'completed') {
       customContent = _buildCompletionInfoBox();
     }
 
