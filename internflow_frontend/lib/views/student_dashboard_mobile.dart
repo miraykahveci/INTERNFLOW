@@ -63,8 +63,8 @@ class _StudentDashboardMobileState extends State<StudentDashboardMobile> {
           .maybeSingle();
 
       setState(() {
-        _fullName = userResponse['full_name'] ?? '';
-        _department = userResponse['department'] ?? '';
+        _fullName = userResponse['full_name'] ?? ''.toString().trim();
+        _department = userResponse['department'] ?? ''.toString().trim();
         _internshipData = internshipResponse;
         _internshipStatus = internshipResponse?['status'] ?? 'none';
         _isLoading = false;
