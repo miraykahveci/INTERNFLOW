@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'student_dashboard.dart';
 import 'academician_dashboard.dart';
+import 'email_verification_page.dart'; 
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -422,32 +423,64 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ),
  
         
-        Row(
-          children: [
-            Checkbox(
-              value: _rememberMe,
-              activeColor: primaryColor,
-              onChanged: (v) => setState(() => _rememberMe = v ?? false),
-            ),
-            const Text("Beni Hatırla", style: TextStyle(color: Colors.grey, fontSize: 13)),
-            const Spacer(),
-            TextButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                  content: Text('Şifre sıfırlama için staj komisyonuyla iletişime geçiniz.'),
-                  backgroundColor: Color(0xFF546E7A),
-                  behavior: SnackBarBehavior.floating,
-                 ),
-                );
-                },
-              child: Text(
-                "Şifremi Unuttum",
-                style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-            ),
-          ],
-        ),
+     Row(
+  children: [
+    Checkbox(
+      value: _rememberMe,
+      activeColor: primaryColor,
+      onChanged: (v) => setState(() => _rememberMe = v ?? false),
+    ),
+    const Text("Beni Hatırla", style: TextStyle(color: Colors.grey, fontSize: 13)),
+    const Spacer(),
+    TextButton(
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Şifre sıfırlama için staj komisyonuyla iletişime geçiniz.'),
+            backgroundColor: Color(0xFF546E7A),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      child: Text(
+        "Şifremi Unuttum",
+        style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 13),
+      ),
+    ),
+  ],
+),
+const SizedBox(height: 4),
+
+// MAIL DOĞRULAMA 
+Align(
+  alignment: Alignment.centerRight,
+  child: TextButton.icon(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const EmailVerificationPage()),
+      );
+    },
+    icon: Icon(Icons.mark_email_read_outlined, size: 14, color: primaryColor.withValues(alpha: 0.7)),
+    label: Text(
+      "Mail adresimi doğrula",
+      style: TextStyle(
+        color: primaryColor.withValues(alpha: 0.7),
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        decoration: TextDecoration.underline,
+        decorationColor: primaryColor.withValues(alpha: 0.4),
+      ),
+    ),
+    style: TextButton.styleFrom(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      minimumSize: const Size(0, 24),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    ),
+  ),
+),
+
+
         const SizedBox(height: 12),
  
         
