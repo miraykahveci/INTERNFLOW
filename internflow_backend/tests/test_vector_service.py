@@ -10,6 +10,9 @@ import os
 import pytest
 from unittest.mock import patch, MagicMock
 import requests
+
+pytest.importorskip("sentence_transformers")
+
 from app.ai.vector_service import (
     EmbeddingStrategy,
     LocalEmbeddingStrategy,
