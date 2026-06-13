@@ -7,17 +7,14 @@ from abc import ABC, abstractmethod
 # 1. ARAYÜZ 
 # ==========================================================================
 class EmbeddingStrategy(ABC):
-    """Embedding üreten servislerin uyması gereken arayüz"""
 
     @abstractmethod
     def generate_embedding(self, text: str) -> list[float]:
-        """Metni 768 boyutlu vektöre çevirir"""
         pass
 
     @property
     @abstractmethod
     def name(self) -> str:
-        """Bu stratejinin adı (loglama için)"""
         pass
 
 
@@ -109,7 +106,6 @@ class APIEmbeddingStrategy(EmbeddingStrategy):
 # 4. FACTORY 
 # ==========================================================================
 def _create_embedding_service() -> EmbeddingStrategy:
-    """EMBEDDING_MODE'a göre doğru strateji oluşturur"""
     mode = os.getenv("EMBEDDING_MODE", "local").lower()
     print(f"[Factory] EMBEDDING_MODE = '{mode}'")
 

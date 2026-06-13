@@ -4,3 +4,8 @@ venv/
 .env
 .DS_Store
 **/.DS_Store
+
+# Coverage files (test çıktıları)
+.coverage
+htmlcov/
+.pytest_cache/

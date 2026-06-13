@@ -10,6 +10,8 @@ from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from datetime import date, timedelta
 from app.main import app
+from app.utils import calculate_business_days
+from app.utils import is_valid_status_transition
 
 # Test client'ı global olarak oluştur
 client = TestClient(app)
@@ -227,8 +229,8 @@ class TestFileValidation:
 
     def test_file_size_limit(self):
         """Dosya boyutu 10MB'ı aşmamalı."""
-        max_size = 10 * 1024 * 1024  # 10MB
-        test_size = 5 * 1024 * 1024   # 5MB
+        max_size = 10 * 1024 * 1024  
+        test_size = 5 * 1024 * 1024   
         assert test_size <= max_size
 
     def test_oversized_file_rejected(self):
@@ -245,107 +247,10 @@ class TestFileValidation:
         assert "sgk_belgesi" in valid_types
 
 
-# ============================================================
-# 8. İş Günü Hesaplama Testleri
-# ============================================================
-
-class TestBusinessDayCalculation:
-    """Staj iş günü hesaplama mantığı testleri."""
-
-    def _calculate_business_days(self, start: date, end: date) -> int:
-        """İş günü hesaplama fonksiyonu (hafta sonları hariç)."""
-        days = 0
-        current = start
-        while current <= end:
-            if current.weekday() < 5:  # Pazartesi=0, Cuma=4
-                days += 1
-            current += timedelta(days=1)
-        return days
-
-    def test_one_week_has_5_business_days(self):
-        """Bir hafta 5 iş günü içermeli."""
-        start = date(2026, 7, 6)   # Pazartesi
-        end = date(2026, 7, 10)    # Cuma
-        assert self._calculate_business_days(start, end) == 5
-
-    def test_weekend_excluded(self):
-        """Hafta sonları iş günü sayılmamalı."""
-        start = date(2026, 7, 6)   # Pazartesi
-        end = date(2026, 7, 12)    # Pazar
-        assert self._calculate_business_days(start, end) == 5
-
-    def test_one_month_internship(self):
-        """1 aylık staj yaklaşık 22 iş günü olmalı."""
-        start = date(2026, 7, 1)
-        end = date(2026, 7, 31)
-        days = self._calculate_business_days(start, end)
-        assert 20 <= days <= 23
-
-    def test_same_day_is_one_day(self):
-        """Aynı gün başlayıp biten staj 1 iş günü olmalı."""
-        day = date(2026, 7, 6)  # Pazartesi
-        assert self._calculate_business_days(day, day) == 1
-
-    def test_saturday_only_is_zero(self):
-        """Sadece cumartesi olan staj 0 iş günü olmalı."""
-        saturday = date(2026, 7, 11)
-        assert self._calculate_business_days(saturday, saturday) == 0
 
 
 # ============================================================
-# 9. Staj Durum Geçişi Testleri
-# ============================================================
-
-class TestInternshipStatusTransitions:
-    """Staj durumu geçiş kuralları testleri."""
-
-    def _is_valid_transition(self, current: str, new: str) -> bool:
-        """Geçerli durum geçişlerini kontrol eder."""
-        valid_transitions = {
-            "pending": ["approved", "rejected"],
-            "approved": ["active"],
-            "active": ["completed"],
-            "rejected": ["pending"],  # Yeniden başvuru
-            "completed": [],
-        }
-        return new in valid_transitions.get(current, [])
-
-    def test_pending_to_approved(self):
-        """Bekleyen başvuru onaylanabilmeli."""
-        assert self._is_valid_transition("pending", "approved")
-
-    def test_pending_to_rejected(self):
-        """Bekleyen başvuru reddedilebilmeli."""
-        assert self._is_valid_transition("pending", "rejected")
-
-    def test_approved_to_active(self):
-        """Onaylanan staj aktifleştirilebilmeli."""
-        assert self._is_valid_transition("approved", "active")
-
-    def test_active_to_completed(self):
-        """Aktif staj tamamlanabilmeli."""
-        assert self._is_valid_transition("active", "completed")
-
-    def test_rejected_can_reapply(self):
-        """Reddedilen öğrenci yeniden başvurabilmeli."""
-        assert self._is_valid_transition("rejected", "pending")
-
-    def test_completed_cannot_change(self):
-        """Tamamlanan staj durumu değiştirilemezim."""
-        assert not self._is_valid_transition("completed", "pending")
-        assert not self._is_valid_transition("completed", "active")
-
-    def test_pending_cannot_skip_to_active(self):
-        """Bekleyen başvuru doğrudan aktif olamaz."""
-        assert not self._is_valid_transition("pending", "active")
-
-    def test_pending_cannot_skip_to_completed(self):
-        """Bekleyen başvuru doğrudan tamamlanamaz."""
-        assert not self._is_valid_transition("pending", "completed")
-
-
-# ============================================================
-# 10. Supabase Client Testleri (Mock)
+# 8. Supabase Client Testleri (Mock)
 # ============================================================
 
 class TestSupabaseConnection:
