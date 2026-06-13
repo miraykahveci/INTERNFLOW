@@ -39,10 +39,28 @@ class PIIMasker:
         self.ip_pattern = re.compile(
             r"\b(?:\d{1,3}\.){3}\d{1,3}\b"
         )
+        
+        self.template_patterns = [
+            re.compile(r"İSTANBUL\s+RUMELİ\s+ÜNİVERSİTESİ", re.IGNORECASE),
+            re.compile(r"MÜHENDİSLİK\s+ve\s+DOĞA\s+BİLİMLERİ\s+FAKÜLTESİ", re.IGNORECASE),
+            re.compile(r"BİLGİSAYAR\s+MÜHENDİSLİĞİ\s+BÖLÜMÜ", re.IGNORECASE),
+            re.compile(r"İş\s+Yerinde\s+Uygulama.*?Günlüğü", re.IGNORECASE),
+            re.compile(r"YAPILAN\s+İŞİN\s+ADI\s*/?\s*KAPSAMI", re.IGNORECASE),
+            re.compile(r"ÇALIŞMA\s+GÜNÜ\s*\d+", re.IGNORECASE),
+            re.compile(r"TARİH\s*\d{1,2}\s*/\s*\d{1,2}\s*/\s*\d{4}", re.IGNORECASE),
+            re.compile(r"Mehmet\s+Balcı\s+Yerleşkesi.*?bilgi@rumeli\.edu\.tr", re.IGNORECASE | re.DOTALL),
+            re.compile(r"Staj\s+Yeri\s+Yetkilisinin\s+Adı.*?İmza\s+ve\s+Kaşe", re.IGNORECASE | re.DOTALL),
+            re.compile(r"Tarih\s*:\s*$", re.IGNORECASE | re.MULTILINE),
+        ]
 
     def mask(self, text: str) -> str:
        
         masked = text
+        
+        for pattern in self.template_patterns:
+            masked = pattern.sub("", masked)
+
+        masked = re.sub(r"\s+", " ", masked).strip()
 
         
         masked = self.email_pattern.sub("[MASKED_EMAIL]", masked)
