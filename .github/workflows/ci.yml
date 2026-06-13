@@ -37,9 +37,13 @@ jobs:
 
       - name: Run tests with coverage
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_URL: https://fake-test.supabase.co
+          SUPABASE_KEY: fake-test-key-for-ci-only
+          SUPABASE_SERVICE_KEY: fake-test-service-key-for-ci-only
           GEMINI_MODE: stub
+          GEMINI_API_KEY: ""
+          EMBEDDING_MODE: local
+          HF_API_TOKEN: fake-hf-token-for-ci
         run: |
           pytest tests/ -v --cov=app --cov-report=term-missing --cov-fail-under=60
 
