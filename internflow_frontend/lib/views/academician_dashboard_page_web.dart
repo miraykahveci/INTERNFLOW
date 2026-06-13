@@ -198,6 +198,40 @@ setState(() {
     }
   }
 
+  Future<void> _sendReminder(Map<String, dynamic> data) async {
+    try {
+      final studentId = data['student_id'] as String;
+      final studentName = data['users']?['full_name'] ?? 'Öğrenci';
+
+      await Supabase.instance.client.from('notifications').insert({
+        'user_id': studentId,
+        'type': 'warning',
+        'message': 'Yüklemeniz gereken belgeler henüz tamamlanmadı. Lütfen en kısa sürede Sürecim sayfanızdan ıslak imzalı kabul formu ve SGK belgenizi yükleyiniz.',
+        'is_read': false,
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$studentName öğrencisine hatırlatma gönderildi 🔔'),
+            backgroundColor: const Color(0xFF16A34A),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hatırlatma gönderilemedi: $e'),
+            backgroundColor: const Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   void _showApprovalDialog(Map<String, dynamic> internData) {
     final studentName = internData['users']?['full_name'] ?? 'Öğrenci';
     final studentNumber = internData['users']?['student_number']?.toString() ?? '-';
@@ -1313,7 +1347,11 @@ setState(() {
               child: InkWell(
                 borderRadius: BorderRadius.circular(11),
                 onTap: () {
-                  if (isPending) _showApprovalDialog(data);
+                  if (isPending) {
+                     _showApprovalDialog(data);
+                  } else {
+                _sendReminder(data);
+                 }
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),

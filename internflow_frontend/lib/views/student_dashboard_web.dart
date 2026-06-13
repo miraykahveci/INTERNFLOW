@@ -7,6 +7,7 @@ import 'student_files_page.dart';
 import 'student_profile_page.dart';
 import 'login_page.dart';
 import 'student_results_page.dart';
+import 'dart:async';  
 
 class StudentDashboardWeb extends StatefulWidget {
   const StudentDashboardWeb({super.key});
@@ -43,11 +44,28 @@ class _StudentDashboardWebState extends State<StudentDashboardWeb> {
   Map<String, dynamic>? _internshipData;
   String _internshipStatus = 'none';
 
+List<Map<String, dynamic>> _notifications = [];
+int _unreadCount = 0;
+Timer? _notificationTimer;
+final GlobalKey _notificationKey = GlobalKey();
+
   @override
-  void initState() {
-    super.initState();
-    _loadAllData();
-  }
+void initState() {
+  super.initState();
+  _loadAllData();
+  _loadNotifications();
+  // Her 30 saniyede bir bildirimleri yenile (polling)
+  _notificationTimer = Timer.periodic(
+    const Duration(seconds: 30),
+    (_) => _loadNotifications(),
+  );
+}
+
+@override
+void dispose() {
+  _notificationTimer?.cancel();
+  super.dispose();
+}
 
   Future<void> _downloadTemplate(String fileName) async {
     final url = '${Supabase.instance.client.rest.url.replaceAll('/rest/v1', '')}/storage/v1/object/public/templates/$fileName';
@@ -55,36 +73,113 @@ class _StudentDashboardWebState extends State<StudentDashboardWeb> {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  Future<void> _loadAllData() async {
-    setState(() => _isLoading = true);
-    try {
-      final userId = Supabase.instance.client.auth.currentUser!.id;
+Future<void> _loadAllData() async {
+  setState(() => _isLoading = true);
+  try {
+    final userId = Supabase.instance.client.auth.currentUser!.id;
+    debugPrint('🔍 USER ID: $userId');
 
-      final userResponse = await Supabase.instance.client
-          .from('users')
-          .select('full_name, department')
-          .eq('user_id', userId)
-          .single();
+    final userResponse = await Supabase.instance.client
+        .from('users')
+        .select('full_name, department')
+        .eq('user_id', userId)
+        .single();
 
-      final internshipResponse = await Supabase.instance.client
-          .from('internship')
-          .select()
-          .eq('student_id', userId)
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
+    debugPrint('🔍 USER RESPONSE: $userResponse');
+    debugPrint('🔍 full_name: ${userResponse['full_name']}');
+    debugPrint('🔍 department: ${userResponse['department']}');
 
-      setState(() {
-        _fullName = userResponse['full_name'] ?? '';
-        _department = userResponse['department'] ?? '';
-        _internshipData = internshipResponse;
-        _internshipStatus = internshipResponse?['status'] ?? 'none';
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-    }
+    final internshipResponse = await Supabase.instance.client
+        .from('internship')
+        .select()
+        .eq('student_id', userId)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    debugPrint('🔍 INTERNSHIP RESPONSE: $internshipResponse');
+
+    setState(() {
+      _fullName = userResponse['full_name'] ?? ''.toString().trim();
+      _department = userResponse['department'] ?? ''.toString().trim();
+      _internshipData = internshipResponse;
+      _internshipStatus = internshipResponse?['status'] ?? 'none';
+      _isLoading = false;
+    });
+
+  } catch (e) {
+    setState(() => _isLoading = false);
   }
+}
+
+  Future<void> _loadNotifications() async {
+  try {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    final response = await Supabase.instance.client
+        .from('notifications')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .limit(20);
+
+    if (!mounted) return;
+    setState(() {
+      _notifications = List<Map<String, dynamic>>.from(response);
+      _unreadCount = _notifications.where((n) => n['is_read'] == false).length;
+    });
+  } catch (e) {
+    debugPrint('Bildirimler yüklenemedi: $e');
+  }
+}
+
+Future<void> _markAsRead(String notificationId) async {
+  try {
+    await Supabase.instance.client
+        .from('notifications')
+        .update({'is_read': true})
+        .eq('notification_id', notificationId);
+
+    if (mounted) {
+      setState(() {
+        final idx = _notifications.indexWhere(
+          (n) => n['notification_id'] == notificationId,
+        );
+        if (idx != -1) {
+          _notifications[idx]['is_read'] = true;
+          _unreadCount = _notifications.where((n) => n['is_read'] == false).length;
+        }
+      });
+    }
+  } catch (e) {
+    debugPrint('Okundu işaretlenemedi: $e');
+  }
+}
+
+Future<void> _markAllAsRead() async {
+  try {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    await Supabase.instance.client
+        .from('notifications')
+        .update({'is_read': true})
+        .eq('user_id', userId)
+        .eq('is_read', false);
+
+    if (mounted) {
+      setState(() {
+        for (var n in _notifications) {
+          n['is_read'] = true;
+        }
+        _unreadCount = 0;
+      });
+    }
+  } catch (e) {
+    debugPrint('Hepsi okundu işaretlenemedi: $e');
+  }
+}
 
   String get _firstName => _fullName.split(' ').first;
 
@@ -217,7 +312,7 @@ class _StudentDashboardWebState extends State<StudentDashboardWeb> {
             const Spacer(),
 
             
-            _buildIconButton(Icons.notifications_outlined, () {}),
+            _buildNotificationButton(),
             const SizedBox(width: 12),
 
             // User profile 
@@ -289,6 +384,295 @@ class _StudentDashboardWebState extends State<StudentDashboardWeb> {
       ),
     );
   }
+
+  Widget _buildNotificationButton() {
+  return Stack(
+    clipBehavior: Clip.none,
+    children: [
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: _notificationKey,
+          borderRadius: BorderRadius.circular(11),
+          onTap: _showNotificationPanel,
+          child: Container(
+            width: 42, height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F7FB),
+              borderRadius: BorderRadius.circular(11),
+              border: Border.all(color: const Color(0xFFEEEEF2)),
+            ),
+            child: Icon(
+              Icons.notifications_outlined,
+              color: _unreadCount > 0 ? primaryColor : textPrimary,
+              size: 19,
+            ),
+          ),
+        ),
+      ),
+      if (_unreadCount > 0)
+        Positioned(
+          right: -2, top: -2,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFDC2626), Color(0xFFB91C1C)],
+              ),
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFDC2626).withValues(alpha: 0.4),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                _unreadCount > 9 ? '9+' : '$_unreadCount',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+
+void _showNotificationPanel() {
+  final RenderBox? renderBox =
+      _notificationKey.currentContext?.findRenderObject() as RenderBox?;
+  if (renderBox == null) return;
+
+  final position = renderBox.localToGlobal(Offset.zero);
+  final size = renderBox.size;
+
+  showMenu(
+    context: context,
+    position: RelativeRect.fromLTRB(
+      position.dx - 320,
+      position.dy + size.height + 8,
+      40,
+      0,
+    ),
+    elevation: 12,
+    color: Colors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: const BorderSide(color: Color(0xFFEEEEF2)),
+    ),
+    items: [
+      PopupMenuItem(
+        enabled: false,
+        padding: EdgeInsets.zero,
+        child: SizedBox(
+          width: 380,
+          child: _buildNotificationPanel(),
+        ),
+      ),
+    ],
+  );
+}
+
+Widget _buildNotificationPanel() {
+  return StatefulBuilder(
+    builder: (context, setMenuState) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: Color(0xFFEEEEF2))),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.notifications_outlined, size: 18, color: primaryColor),
+                const SizedBox(width: 8),
+                const Text(
+                  'Bildirimler',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textPrimary),
+                ),
+                const Spacer(),
+                if (_unreadCount > 0)
+                  TextButton(
+                    onPressed: () async {
+                      await _markAllAsRead();
+                      setMenuState(() {});
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      minimumSize: const Size(0, 28),
+                    ),
+                    child: const Text(
+                      'Tümünü oku',
+                      style: TextStyle(fontSize: 11, color: primaryColor, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Liste
+          if (_notifications.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Container(
+                    width: 60, height: 60,
+                    decoration: BoxDecoration(
+                      color: bgCanvas,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: const Icon(Icons.inbox_outlined, color: textMuted, size: 28),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Henüz bildirim yok',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textPrimary),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Yeni bildirimler burada görünecek',
+                    style: TextStyle(fontSize: 11, color: textSecondary),
+                  ),
+                ],
+              ),
+            )
+          else
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 420),
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: _notifications.length,
+                separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFEEEEF2)),
+                itemBuilder: (context, i) => _buildNotificationTile(_notifications[i], setMenuState),
+              ),
+            ),
+        ],
+      );
+    },
+  );
+}
+
+Widget _buildNotificationTile(Map<String, dynamic> notification, StateSetter setMenuState) {
+  final type = notification['type'] as String? ?? 'info';
+  final message = notification['message'] as String? ?? '';
+  final isRead = notification['is_read'] as bool? ?? false;
+  final createdAt = notification['created_at'] as String? ?? '';
+
+  // Type'a göre renk ve icon
+  Color color;
+  IconData icon;
+  switch (type) {
+    case 'warning':
+      color = const Color(0xFFEA580C);
+      icon = Icons.warning_amber_outlined;
+      break;
+    case 'success':
+      color = const Color(0xFF16A34A);
+      icon = Icons.check_circle_outline;
+      break;
+    case 'error':
+      color = const Color(0xFFDC2626);
+      icon = Icons.error_outline;
+      break;
+    default: // info
+      color = const Color(0xFF2563EB);
+      icon = Icons.info_outline;
+  }
+
+  String timeAgo = '';
+  try {
+    final dt = DateTime.parse(createdAt).toLocal();
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) {
+      timeAgo = 'Az önce';
+    } else if (diff.inMinutes < 60) {
+      timeAgo = '${diff.inMinutes} dk önce';
+    } else if (diff.inHours < 24) {
+      timeAgo = '${diff.inHours} saat önce';
+    } else if (diff.inDays < 7) {
+      timeAgo = '${diff.inDays} gün önce';
+    } else {
+      timeAgo = '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}';
+    }
+  } catch (_) {}
+
+  return InkWell(
+    onTap: () async {
+      if (!isRead) {
+        await _markAsRead(notification['notification_id'] as String);
+        setMenuState(() {});
+      }
+    },
+    child: Container(
+      color: isRead ? Colors.white : color.withValues(alpha: 0.04),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: textPrimary,
+                    height: 1.4,
+                    fontWeight: isRead ? FontWeight.w500 : FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  timeAgo,
+                  style: const TextStyle(fontSize: 10, color: textMuted, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ),
+          if (!isRead)
+            Container(
+              width: 8, height: 8,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.4),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
+}
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isActive = _selectedIndex == index;
