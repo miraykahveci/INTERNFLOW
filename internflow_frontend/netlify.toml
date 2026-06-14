@@ -1,0 +1,49 @@
+# ============================================
+# Netlify Build Configuration
+# InternFlow Frontend - Flutter Web
+# ============================================
+
+[build]
+  # Output directory (Flutter build çıktısı)
+  publish = "build/web"
+  
+  # Build komutu - 5 aşamalı:
+  # 1. Flutter SDK klonla (--depth 1 = hızlı, sadece son commit)
+  # 2. PATH'e ekle
+  # 3. Versiyon doğrula
+  # 4. Web desteği aktive et
+  # 5. flutter pub get + build (Production URL inject!)
+  command = """
+    git clone https://github.com/flutter/flutter.git --depth 1 -b stable _flutter && \
+    export PATH="$PATH:$(pwd)/_flutter/bin" && \
+    flutter --version && \
+    flutter config --enable-web && \
+    flutter pub get && \
+    flutter build web --release --dart-define=API_BASE_URL=https://internflow-backend-1p5z.onrender.com
+  """
+
+[build.environment]
+  FLUTTER_VERSION = "stable"
+
+# ============================================
+# SPA Routing (Flutter Web için zorunlu)
+# Sayfa yenileyince 404 olmasın diye
+# ============================================
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ============================================
+# Cache Headers - Performance
+# JavaScript ve assetler 1 yıl cache
+# ============================================
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
