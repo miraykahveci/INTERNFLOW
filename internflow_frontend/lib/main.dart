@@ -8,28 +8,33 @@ import 'views/academician_dashboard.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (e) {
-    print("dotenv yüklenemedi (production'da normal): $e");
-  }
-
   // ========================================================
   // Supabase Initialize — Environment-aware
   // ========================================================
-  // Production: --dart-define ile inject edilir (Netlify build)
-  // Lokal Dev:  .env dosyasından okunur (geriye uyumlu)
+  
   const supabaseUrlEnv = String.fromEnvironment('SUPABASE_URL');
   const supabaseKeyEnv = String.fromEnvironment('SUPABASE_KEY');
 
-  final supabaseUrl = supabaseUrlEnv.isNotEmpty
-      ? supabaseUrlEnv
-      : dotenv.env['SUPABASE_URL']!;
+  String supabaseUrl;
+  String supabaseKey;
 
-  final supabaseKey = supabaseKeyEnv.isNotEmpty
-      ? supabaseKeyEnv
-      : dotenv.env['SUPABASE_KEY']!;
+  if (supabaseUrlEnv.isNotEmpty && supabaseKeyEnv.isNotEmpty) {
+    // PRODUCTION: --dart-define'dan al, dotenv kullanma
+    supabaseUrl = supabaseUrlEnv;
+    supabaseKey = supabaseKeyEnv;
+    print("Supabase: --dart-define modu (production)");
+  } else {
+    // LOKAL DEV: .env'i yüklemeyi dene
+    try {
+      await dotenv.load(fileName: ".env");
+      supabaseUrl = dotenv.env['SUPABASE_URL']!;
+      supabaseKey = dotenv.env['SUPABASE_KEY']!;
+      print("Supabase: .env modu (lokal dev)");
+    } catch (e) {
+      print("HATA: Ne --dart-define ne .env bulundu: $e");
+      rethrow;
+    }
+  }
 
   print("Supabase URL: $supabaseUrl");
 
