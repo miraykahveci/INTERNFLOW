@@ -69,15 +69,22 @@ class _AcademicianStudentsWebState extends State<AcademicianStudentsWeb> {
       }
 
       final students = uniqueStudents.values.toList();
-
+      
       int pending = 0, approved = 0, active = 0, completed = 0, rejected = 0;
       for (var s in students) {
-        switch (s['status']) {
-          case 'pending': pending++; break;
-          case 'approved': approved++; break;
-          case 'active': active++; break;
-          case 'completed': completed++; break;
-          case 'rejected': rejected++; break;
+        final status = s['status'];
+        final result = s['result'];
+        
+        if (status == 'completed' && result == 'fail') {
+          rejected++;
+        } else {
+          switch (status) {
+            case 'pending': pending++; break;
+            case 'approved': approved++; break;
+            case 'active': active++; break;
+            case 'completed': completed++; break; 
+            case 'rejected': rejected++; break;
+          }
         }
       }
 
@@ -102,7 +109,20 @@ class _AcademicianStudentsWebState extends State<AcademicianStudentsWeb> {
     List<Map<String, dynamic>> result = _allStudents;
 
     if (_activeFilter != 'all') {
-      result = result.where((s) => s['status'] == _activeFilter).toList();
+      result = result.where((s) {
+        final status = s['status'];
+        final stajResult = s['result'];
+        
+        if (_activeFilter == 'rejected') {
+          return status == 'rejected' || (status == 'completed' && stajResult == 'fail');
+        }
+        
+        if (_activeFilter == 'completed') {
+          return status == 'completed' && stajResult != 'fail';
+        }
+
+        return status == _activeFilter;
+      }).toList();
     }
 
     if (_searchQuery.isNotEmpty) {
@@ -118,7 +138,11 @@ class _AcademicianStudentsWebState extends State<AcademicianStudentsWeb> {
     setState(() => _filteredStudents = result);
   }
 
-  Map<String, dynamic> _getStatusInfo(String status) {
+  Map<String, dynamic> _getStatusInfo(String status, {String? result}) {
+    if (status == 'completed' && result == 'fail') {
+      return {'label': 'Başarısız', 'color': const Color(0xFFDC2626)};
+    }
+    
     switch (status) {
       case 'pending':
         return {'label': 'Onay Bekliyor', 'color': const Color(0xFFEA580C)};
@@ -127,7 +151,7 @@ class _AcademicianStudentsWebState extends State<AcademicianStudentsWeb> {
       case 'active':
         return {'label': 'Stajda', 'color': const Color(0xFF2563EB)};
       case 'completed':
-        return {'label': 'Tamamlandı', 'color': purpleGlow};
+        return {'label': 'Başarılı', 'color': purpleGlow};
       case 'rejected':
         return {'label': 'Reddedildi', 'color': const Color(0xFFDC2626)};
       default:
@@ -625,7 +649,8 @@ class _AcademicianStudentsWebState extends State<AcademicianStudentsWeb> {
     final department = student?['department'] ?? '-';
     final companyName = internship['company_name'] ?? '-';
     final status = internship['status'] as String? ?? 'pending';
-    final statusInfo = _getStatusInfo(status);
+    final stajResult = internship['result'] as String?;
+    final statusInfo = _getStatusInfo(status, result: stajResult);
     final progress = _getProgress(status);
     final startDate = internship['start_date'] ?? '';
     final isHovered = _hoveredStudent == index;
