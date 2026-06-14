@@ -1,0 +1,51 @@
+# ============================================
+# InternFlow Backend - Docker Compose
+# ============================================
+# Lokal geliştirme ve test için container orkestrasyon
+# Production: Render kendi build sistemini kullanır
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Backend API - FastAPI + Uvicorn
+  # ============================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: internflow-backend
+    
+    # Environment variables - .env dosyasından okunur
+    env_file:
+      - .env
+    
+    # Port mapping (host:container)
+    ports:
+      - "8000:8000"
+    
+    # Health check - backend ayakta mı?
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Otomatik yeniden başlatma
+    restart: unless-stopped
+    
+    # Resource limits (production simülasyonu)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+# Network (gelecekte multi-service için)
+networks:
+  default:
+    name: internflow-network
