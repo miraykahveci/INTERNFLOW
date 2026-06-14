@@ -8,14 +8,34 @@ import 'views/academician_dashboard.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
+  
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    print("dotenv yüklenemedi (production'da normal): $e");
+  }
 
-  print("URL: ${dotenv.env['SUPABASE_URL']}");
-  print("KEY: ${dotenv.env['SUPABASE_KEY']}");
+  // ========================================================
+  // Supabase Initialize — Environment-aware
+  // ========================================================
+  // Production: --dart-define ile inject edilir (Netlify build)
+  // Lokal Dev:  .env dosyasından okunur (geriye uyumlu)
+  const supabaseUrlEnv = String.fromEnvironment('SUPABASE_URL');
+  const supabaseKeyEnv = String.fromEnvironment('SUPABASE_KEY');
+
+  final supabaseUrl = supabaseUrlEnv.isNotEmpty
+      ? supabaseUrlEnv
+      : dotenv.env['SUPABASE_URL']!;
+
+  final supabaseKey = supabaseKeyEnv.isNotEmpty
+      ? supabaseKeyEnv
+      : dotenv.env['SUPABASE_KEY']!;
+
+  print("Supabase URL: $supabaseUrl");
 
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_KEY']!,
+    url: supabaseUrl,
+    anonKey: supabaseKey,
   );
 
   runApp(const MyApp());
