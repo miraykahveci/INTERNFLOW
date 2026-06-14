@@ -53,8 +53,9 @@ class APIEmbeddingStrategy(EmbeddingStrategy):
 
    
     API_URL = (
-        "https://api-inference.huggingface.co/pipeline/feature-extraction/"
+        "https://router.huggingface.co/hf-inference/models/"
         "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+        "/pipeline/feature-extraction"
     )
 
     def __init__(self):
