@@ -184,28 +184,35 @@ class _StudentProcessWebState extends State<StudentProcessWeb> {
     });
     
     
-if (docType == 'sgk_belgesi' && _islakImzaUploaded) {
-  await Supabase.instance.client
-      .from('internship')
-      .update({'status': 'active'})
+if (docType == 'sgk_belgesi' || docType == 'basvuru_formu') {
+  final docs = await Supabase.instance.client
+      .from('documents')
+      .select('doc_type')
       .eq('intern_id', _internId!);
 
-  setState(() {
-    _internshipStatus = 'active';
-    _progressPercentage = 70;
-  });
-}
+  final uploadedTypes =
+      (docs as List).map((d) => d['doc_type'] as String).toSet();
+  final hasBasvuru = uploadedTypes.contains('basvuru_formu');
+  final hasSgk = uploadedTypes.contains('sgk_belgesi');
 
-if (docType == 'basvuru_formu' && _sgkBelgesiUploaded) {
-  await Supabase.instance.client
+  final internRow = await Supabase.instance.client
       .from('internship')
-      .update({'status': 'active'})
-      .eq('intern_id', _internId!);
+      .select('status')
+      .eq('intern_id', _internId!)
+      .single();
+  final currentStatus = internRow['status'] as String;
 
-  setState(() {
-    _internshipStatus = 'active';
-    _progressPercentage = 70;
-  });
+  if (hasBasvuru && hasSgk && currentStatus == 'approved') {
+    await Supabase.instance.client
+        .from('internship')
+        .update({'status': 'active'})
+        .eq('intern_id', _internId!);
+
+    setState(() {
+      _internshipStatus = 'active';
+      _progressPercentage = 70;
+    });
+  }
 }
 
     if (mounted) {

@@ -186,6 +186,29 @@ class _StudentProcessPageMobileState extends State<StudentProcessPageMobile> {
         }
       });
 
+      if (docType == 'sgk_belgesi' || docType == 'basvuru_formu') {
+        final docs = await Supabase.instance.client
+            .from('documents')
+            .select('doc_type')
+            .eq('intern_id', _internId!);
+
+        final uploadedTypes =
+            (docs as List).map((d) => d['doc_type'] as String).toSet();
+        final hasBasvuru = uploadedTypes.contains('basvuru_formu');
+        final hasSgk = uploadedTypes.contains('sgk_belgesi');
+
+        if (hasBasvuru && hasSgk && _internshipStatus == 'approved') {
+          await Supabase.instance.client
+              .from('internship')
+              .update({'status': 'active'})
+              .eq('intern_id', _internId!);
+
+          setState(() {
+            _internshipStatus = 'active';
+          });
+        }
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
