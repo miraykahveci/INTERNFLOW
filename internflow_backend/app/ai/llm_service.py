@@ -6,7 +6,7 @@ from google import genai
 # ==========================================================================
 # SABİTLER
 # ==========================================================================
-MODEL_NAME = "gemini-flash-lite-latest"
+MODEL_NAME = "gemini-3.1-flash-lite"
 MAX_INPUT_CHARS = 15000
 
 

@@ -1,9 +1,8 @@
 -- Migration 005: AI Analiz sonuçları tablosu
 -- Tarih: 2026-03-20
 -- Açıklama: Yapay zeka modülünün ürettiği özet, benzerlik ve risk sonuçlarını saklayan tablo
--- NOT: Bu tablo final döneminde aktif olarak kullanılacaktır
 
--- pgvector eklentisini aktifleştir
+
 CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE TABLE analysis_result (

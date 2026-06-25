@@ -1,9 +1,7 @@
 from app.db.supabase_client import supabase
 
 
-# ==========================================================================
-# RISK THRESHOLD'LARI 
-# ==========================================================================
+
 HIGH_RISK_THRESHOLD = 0.80    
 MEDIUM_RISK_THRESHOLD = 0.60  
 

@@ -43,8 +43,8 @@ VALID_STATUS_TRANSITIONS = {
     "pending":   ["approved", "rejected"],
     "approved":  ["active"],
     "active":    ["completed"],
-    "rejected":  ["pending"],   # Yeniden başvuru
-    "completed": [],             # Terminal state
+    "rejected":  ["pending"],   
+    "completed": [],             
 }
 
 

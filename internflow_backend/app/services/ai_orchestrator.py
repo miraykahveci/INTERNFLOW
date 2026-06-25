@@ -28,7 +28,7 @@ def _mark_as_failed(analysis_id: str, error_message: str) -> None:
     try:
         supabase.table("analysis_result").update({
             "status": "failed",
-            "error_message": error_message[:500],  # çok uzun olmasın
+            "error_message": error_message[:500],  
             "current_step": "Hata oluştu",
         }).eq("analysis_id", analysis_id).execute()
         print(f"[Orchestrator] {analysis_id} → FAILED: {error_message}")

@@ -32,7 +32,7 @@ class LocalEmbeddingStrategy(EmbeddingStrategy):
         from sentence_transformers import SentenceTransformer
 
         print(f"[LocalEmbedder] Model yükleniyor: {self.MODEL_NAME}")
-        print("[LocalEmbedder] İlk seferde ~470 MB indirir, sonra cache'ten okur...")
+        print("[LocalEmbedder] İlk seferde ~1GB indirir, sonra cache'ten okur...")
         self.model = SentenceTransformer(self.MODEL_NAME)
         print("[LocalEmbedder] Model hazır ✓")
 
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     test_metinleri = [
         "Bugün TÜBİTAK BİLGEM'de siber güvenlik laboratuvarında çalıştım.",
         "Penetration testing araçlarıyla ağ güvenliği analizi gerçekleştirdim.",
-        "Bugün pasta yaptım, 2 yumurta ve 1 bardak un kullandım.",  # Alakasız
+        "Bugün pasta yaptım, 2 yumurta ve 1 bardak un kullandım.", 
     ]
 
     vectors = []
